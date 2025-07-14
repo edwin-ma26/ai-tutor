@@ -118,7 +118,7 @@ export default function ContentArea({
 
   if (!selectedSubtopic || !selectedUnit) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50">
+      <div className="h-full flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-book-open text-slate-400 text-2xl"></i>
@@ -132,7 +132,7 @@ export default function ContentArea({
 
   if (isLoading) {
     return (
-      <div className="flex-1">
+      <div className="h-full bg-slate-50">
         <LoadingSpinner message="AI is creating your personalized learning material..." />
       </div>
     );
@@ -140,7 +140,7 @@ export default function ContentArea({
 
   if (!content) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="h-full flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
@@ -166,9 +166,9 @@ export default function ContentArea({
   ];
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-50">
       {/* Content Header */}
-      <header className="bg-white border-b border-slate-200 p-6 shadow-sm">
+      <header className="bg-white border-b border-slate-200 p-6 shadow-sm flex-shrink-0">
         <nav className="flex items-center space-x-2 text-sm mb-3">
           {breadcrumb.map((item, index) => (
             <span key={index} className="flex items-center">
@@ -216,7 +216,7 @@ export default function ContentArea({
       </header>
 
       {/* Content Body */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-4xl mx-auto p-8">
           <article className="prose prose-slate max-w-none">
             

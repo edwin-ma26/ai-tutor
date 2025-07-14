@@ -79,7 +79,7 @@ export default function Learning() {
         />
       )}
       
-      <ResizablePanelGroup direction="horizontal" className="w-full">
+      <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         {/* Sidebar Panel */}
         <ResizablePanel id="sidebar" order={1} defaultSize={25} minSize={20} maxSize={35}>
           <Sidebar
