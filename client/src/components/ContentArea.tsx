@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { SubtopicContent, Subtopic } from "@shared/schema";
 import { DIFFERENTIAL_EQUATIONS_UNITS } from "@/lib/types";
 import { contentStorage } from "@/lib/storage";
@@ -6,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import LoadingSpinner from "./LoadingSpinner";
 import MathRenderer from "./MathRenderer";
+import { FileText, MessageSquare } from "lucide-react";
 
 // Helper function to get segment configuration
 function getSegmentConfig(segmentKey: string) {
@@ -88,6 +90,7 @@ export default function ContentArea({
   const [content, setContent] = useState<SubtopicContent | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const selectedUnit = DIFFERENTIAL_EQUATIONS_UNITS.find(u => u.id === selectedUnitId);
   const selectedSubtopic = selectedSubtopicId 
@@ -263,10 +266,16 @@ export default function ContentArea({
               <i className={`${isChatVisible ? 'fas fa-eye-slash' : 'fas fa-robot'} text-sm`}></i>
             </button>
             <button 
-              className="p-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors border border-emerald-200"
+              onClick={() => {
+                if (selectedSubtopicId && selectedUnitId) {
+                  const practiceUrl = `/practice?subtopicId=${selectedSubtopicId}&unitId=${selectedUnitId}&subtopicTitle=${encodeURIComponent(selectedSubtopic.title)}`;
+                  setLocation(practiceUrl);
+                }
+              }}
+              className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors border border-green-200"
               title="Practice Questions"
             >
-              <i className="fas fa-question-circle text-sm"></i>
+              <FileText className="w-4 h-4" />
             </button>
             <button
               onClick={handleRegenerateContent}

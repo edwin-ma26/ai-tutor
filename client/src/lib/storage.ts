@@ -1,9 +1,10 @@
-import { Subtopic, SubtopicContent, ChatMessage } from "@shared/schema";
+import { Subtopic, SubtopicContent, ChatMessage, PracticeQuestions } from "@shared/schema";
 
 const STORAGE_KEYS = {
   SUBTOPICS: 'learning-app-subtopics',
   CONTENT: 'learning-app-content', 
   CHAT_HISTORY: 'learning-app-chat-history',
+  PRACTICE_QUESTIONS: 'learning-app-practice-questions',
 } as const;
 
 // Subtopics storage
@@ -130,6 +131,53 @@ export const chatStorage = {
   },
 };
 
+// Practice questions storage
+export const practiceQuestionsStorage = {
+  get: (subtopicId: string): PracticeQuestions | null => {
+    try {
+      const stored = localStorage.getItem(`${STORAGE_KEYS.PRACTICE_QUESTIONS}-${subtopicId}`);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  set: (subtopicId: string, questions: PracticeQuestions): void => {
+    try {
+      localStorage.setItem(`${STORAGE_KEYS.PRACTICE_QUESTIONS}-${subtopicId}`, JSON.stringify(questions));
+    } catch (error) {
+      console.error('Failed to cache practice questions:', error);
+    }
+  },
+
+  add: (subtopicId: string, newQuestions: PracticeQuestions): void => {
+    const existing = practiceQuestionsStorage.get(subtopicId);
+    if (existing) {
+      const combined = {
+        ...existing,
+        questions: [...existing.questions, ...newQuestions.questions],
+        generatedAt: new Date().toISOString(),
+      };
+      practiceQuestionsStorage.set(subtopicId, combined);
+    } else {
+      practiceQuestionsStorage.set(subtopicId, newQuestions);
+    }
+  },
+
+  clear: (subtopicId: string): void => {
+    localStorage.removeItem(`${STORAGE_KEYS.PRACTICE_QUESTIONS}-${subtopicId}`);
+  },
+
+  clearAll: (): void => {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(STORAGE_KEYS.PRACTICE_QUESTIONS)) {
+        localStorage.removeItem(key);
+      }
+    });
+  },
+};
+
 // Global cache management
 export const cacheManager = {
   clearUnit: (unitId: string): void => {
@@ -142,6 +190,7 @@ export const cacheManager = {
     subtopicsStorage.clearAll();
     contentStorage.clearAll();
     chatStorage.clearAll();
+    practiceQuestionsStorage.clearAll();
   },
 
   getSize: (): string => {

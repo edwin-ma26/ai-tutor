@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { Subtopic, SubtopicContent } from "@shared/schema";
+import { Subtopic, SubtopicContent, PracticeQuestions } from "@shared/schema";
 import 'dotenv/config';
 
 console.log("Gemini API Key:", process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
@@ -273,5 +273,142 @@ export async function testGeminiConnection(): Promise<boolean> {
   } catch (error) {
     console.error("Gemini connection test failed:", error);
     return false;
+  }
+}
+
+// Generate practice questions for a subtopic
+export async function generatePracticeQuestions(
+  subtopicTitle: string,
+  unitTitle: string,
+  courseTitle: string = "Differential Equations"
+): Promise<PracticeQuestions> {
+  try {
+    const prompt = `Generate exactly 5 practice questions for the subtopic "${subtopicTitle}" in the unit "${unitTitle}" from the course "${courseTitle}".
+
+Each question should:
+1. Test understanding of the key concepts
+2. Range from basic to intermediate difficulty
+3. Include a complete, step-by-step solution
+
+Use this exact format:
+
+QUESTION 1: [Your question here]
+ANSWER 1: [Complete step-by-step solution]
+
+QUESTION 2: [Your question here]
+ANSWER 2: [Complete step-by-step solution]
+
+[Continue for all 5 questions...]
+
+Make sure each question tests different aspects of the subtopic and provides educational value.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const rawText = response.text || "";
+    
+    if (!rawText) {
+      throw new Error("Empty response from Gemini");
+    }
+
+    // Parse the response into questions and answers
+    const questions = [];
+    const questionRegex = /QUESTION\s+(\d+):\s*(.*?)\s*ANSWER\s+\1:\s*(.*?)(?=QUESTION\s+\d+:|$)/gs;
+    let match;
+    let questionNumber = 1;
+
+    while ((match = questionRegex.exec(rawText)) !== null) {
+      const question = match[2].trim();
+      const answer = match[3].trim();
+      
+      if (question && answer) {
+        questions.push({
+          id: `${subtopicTitle.toLowerCase().replace(/\s+/g, '-')}-q${questionNumber}`,
+          question: question,
+          answer: answer,
+        });
+        questionNumber++;
+      }
+    }
+
+    // Fallback parsing if regex doesn't work
+    if (questions.length === 0) {
+      const sections = rawText.split(/QUESTION\s+\d+:/i).filter(s => s.trim());
+      
+      sections.forEach((section, index) => {
+        const answerSplit = section.split(/ANSWER\s+\d+:/i);
+        if (answerSplit.length >= 2) {
+          const question = answerSplit[0].trim();
+          const answer = answerSplit[1].trim();
+          
+          if (question && answer) {
+            questions.push({
+              id: `${subtopicTitle.toLowerCase().replace(/\s+/g, '-')}-q${index + 1}`,
+              question: question,
+              answer: answer,
+            });
+          }
+        }
+      });
+    }
+
+    // Final fallback - split by lines and try to parse
+    if (questions.length === 0) {
+      const lines = rawText.split('\n').filter(line => line.trim());
+      let currentQuestion = '';
+      let currentAnswer = '';
+      let isAnswer = false;
+      
+      lines.forEach((line, index) => {
+        if (line.match(/^QUESTION\s+\d+:/i)) {
+          if (currentQuestion && currentAnswer) {
+            questions.push({
+              id: `${subtopicTitle.toLowerCase().replace(/\s+/g, '-')}-q${questions.length + 1}`,
+              question: currentQuestion,
+              answer: currentAnswer,
+            });
+          }
+          currentQuestion = line.replace(/^QUESTION\s+\d+:\s*/i, '').trim();
+          currentAnswer = '';
+          isAnswer = false;
+        } else if (line.match(/^ANSWER\s+\d+:/i)) {
+          currentAnswer = line.replace(/^ANSWER\s+\d+:\s*/i, '').trim();
+          isAnswer = true;
+        } else if (line.trim()) {
+          if (isAnswer) {
+            currentAnswer += ' ' + line.trim();
+          } else {
+            currentQuestion += ' ' + line.trim();
+          }
+        }
+      });
+      
+      // Add the last question
+      if (currentQuestion && currentAnswer) {
+        questions.push({
+          id: `${subtopicTitle.toLowerCase().replace(/\s+/g, '-')}-q${questions.length + 1}`,
+          question: currentQuestion,
+          answer: currentAnswer,
+        });
+      }
+    }
+
+    if (questions.length === 0) {
+      throw new Error("No valid questions generated");
+    }
+
+    const practiceQuestions: PracticeQuestions = {
+      subtopicId: subtopicTitle.toLowerCase().replace(/\s+/g, '-'),
+      questions: questions,
+      generatedAt: new Date().toISOString(),
+    };
+
+    return practiceQuestions;
+
+  } catch (error) {
+    console.error("Error generating practice questions:", error);
+    throw new Error(`Failed to generate practice questions: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

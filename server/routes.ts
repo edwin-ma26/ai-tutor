@@ -4,11 +4,13 @@ import {
   generateSubtopicsRequestSchema, 
   generateContentRequestSchema,
   chatRequestSchema,
+  generatePracticeQuestionsRequestSchema,
   generateSubtopicsResponseSchema,
   generateContentResponseSchema,
-  chatResponseSchema
+  chatResponseSchema,
+  generatePracticeQuestionsResponseSchema
 } from "@shared/schema";
-import { generateSubtopics, generateSubtopicContent, generateChatResponse } from "./services/gemini";
+import { generateSubtopics, generateSubtopicContent, generateChatResponse, generatePracticeQuestions } from "./services/gemini";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -66,6 +68,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error generating chat response:", error);
       res.status(500).json({ 
         message: "Failed to generate response. Please check your API key and try again." 
+      });
+    }
+  });
+
+  // Generate practice questions for a subtopic
+  app.post("/api/generate-practice-questions", async (req, res) => {
+    try {
+      const validatedData = generatePracticeQuestionsRequestSchema.parse(req.body);
+      
+      const questions = await generatePracticeQuestions(
+        validatedData.subtopicTitle,
+        validatedData.unitTitle,
+        validatedData.courseTitle
+      );
+      
+      const response = generatePracticeQuestionsResponseSchema.parse({ questions });
+      res.json(response);
+    } catch (error) {
+      console.error("Error generating practice questions:", error);
+      res.status(500).json({ 
+        message: "Failed to generate practice questions. Please check your API key and try again." 
       });
     }
   });

@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Unit, Subtopic } from "@shared/schema";
 import { DIFFERENTIAL_EQUATIONS_UNITS, COURSE_INFO } from "@/lib/types";
 import { subtopicsStorage, cacheManager } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { FileText } from "lucide-react";
 
 interface SidebarProps {
   selectedUnitId: string | null;
@@ -30,6 +32,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const [loadingUnits, setLoadingUnits] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const handleUnitClick = async (unit: Unit) => {
     const isExpanded = expandedUnits.has(unit.id);
@@ -188,23 +191,39 @@ export default function Sidebar({
                     {subtopics.map((subtopic) => {
                       const isSubtopicSelected = selectedSubtopicId === subtopic.id;
                       
+                      const handlePracticeClick = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        const practiceUrl = `/practice?subtopicId=${subtopic.id}&unitId=${unit.id}&subtopicTitle=${encodeURIComponent(subtopic.title)}`;
+                        setLocation(practiceUrl);
+                      };
+                      
                       return (
-                        <button
-                          key={subtopic.id}
-                          onClick={() => onSubtopicSelect(subtopic.id, unit.id)}
-                          className={`w-full text-left p-2 rounded-md transition-colors text-sm ${
-                            isSubtopicSelected
-                              ? 'bg-primary-50 border border-primary-200 text-primary-700'
-                              : 'hover:bg-slate-100 text-slate-700 hover:text-slate-900'
-                          }`}
-                        >
-                          <div className={`font-medium ${isSubtopicSelected ? 'text-primary-700' : ''}`}>
-                            {subtopic.title}
-                          </div>
-                          <div className={`text-xs ${isSubtopicSelected ? 'text-primary-600' : 'text-slate-500'}`}>
-                            {subtopic.description}
-                          </div>
-                        </button>
+                        <div key={subtopic.id} className="relative group">
+                          <button
+                            onClick={() => onSubtopicSelect(subtopic.id, unit.id)}
+                            className={`w-full text-left p-2 rounded-md transition-colors text-sm ${
+                              isSubtopicSelected
+                                ? 'bg-primary-50 border border-primary-200 text-primary-700'
+                                : 'hover:bg-slate-100 text-slate-700 hover:text-slate-900'
+                            }`}
+                          >
+                            <div className={`font-medium ${isSubtopicSelected ? 'text-primary-700' : ''}`}>
+                              {subtopic.title}
+                            </div>
+                            <div className={`text-xs ${isSubtopicSelected ? 'text-primary-600' : 'text-slate-500'}`}>
+                              {subtopic.description}
+                            </div>
+                          </button>
+                          
+                          {/* Practice Button */}
+                          <button
+                            onClick={handlePracticeClick}
+                            className="absolute top-2 right-2 w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
+                            title="Practice Questions"
+                          >
+                            <FileText className="w-3 h-3" />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
