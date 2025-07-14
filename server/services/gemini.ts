@@ -82,20 +82,30 @@ export async function generateSubtopicContent(
 ): Promise<SubtopicContent> {
   try {
     const prompt = `I'm studying a course on ${courseTitle}.
-Please write a brief textbook-style explanation of the subtopic "${subtopicTitle}", which falls under the unit "${unitTitle}".
+Please write a detailed textbook-style explanation of the subtopic "${subtopicTitle}", which falls under the unit "${unitTitle}".
 
-The response should be structured in plain text using the following format:
+The response should be structured using the following format:
 
 Definition:
-<One short paragraph>
+<Comprehensive explanation of the concept with proper mathematical notation>
 
 Method:
-<One short paragraph>
+<Step-by-step approach with formulas and procedures>
 
 Example:
-<Complete worked example with steps and final answer>
+<Complete worked example with all mathematical steps>
 
-Do not use markdown or any extra formatting. Just return clean text with those section headers.`;
+IMPORTANT: Use proper LaTeX notation for all mathematical expressions:
+- Inline math: $x^2 + 1$, $\\frac{dy}{dx}$, $e^{-st}$
+- Display math: $$\\int_0^\\infty e^{-st}f(t)dt = F(s)$$
+- Use \\frac{numerator}{denominator} for fractions
+- Use \\int for integrals, \\sum for summations
+- Use \\lim_{x \\to a} for limits
+- Use \\sqrt{expression} for square roots
+- Use \\cdot for multiplication dots
+- Format derivatives as \\frac{dy}{dx} or y'
+
+Return clean text with LaTeX math expressions. Do not use markdown formatting.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -116,14 +126,14 @@ Do not use markdown or any extra formatting. Just return clean text with those s
     let example = "";
 
     sections.forEach(section => {
-      const cleanSection = cleanResponse(section);
+      const trimmedSection = section.trim();
       
-      if (cleanSection.startsWith("Definition:")) {
-        definition = cleanSection.replace("Definition:", "").trim();
-      } else if (cleanSection.startsWith("Method:")) {
-        method = cleanSection.replace("Method:", "").trim();
-      } else if (cleanSection.startsWith("Example:")) {
-        example = cleanSection.replace("Example:", "").trim();
+      if (trimmedSection.startsWith("Definition:")) {
+        definition = trimmedSection.replace("Definition:", "").trim();
+      } else if (trimmedSection.startsWith("Method:")) {
+        method = trimmedSection.replace("Method:", "").trim();
+      } else if (trimmedSection.startsWith("Example:")) {
+        example = trimmedSection.replace("Example:", "").trim();
       }
     });
 
@@ -132,12 +142,12 @@ Do not use markdown or any extra formatting. Just return clean text with those s
       const fallbackSections = rawText.split('\n\n').filter(section => section.trim());
       
       if (fallbackSections.length >= 3) {
-        definition = definition || cleanResponse(fallbackSections[0]);
-        method = method || cleanResponse(fallbackSections[1]);
-        example = example || cleanResponse(fallbackSections.slice(2).join('\n\n'));
+        definition = definition || fallbackSections[0].trim();
+        method = method || fallbackSections[1].trim();
+        example = example || fallbackSections.slice(2).join('\n\n').trim();
       } else {
         // If all else fails, use the entire response as definition
-        definition = definition || cleanResponse(rawText);
+        definition = definition || rawText.trim();
         method = method || "Please refer to the definition above for the general approach.";
         example = example || "Example will be provided in future updates.";
       }

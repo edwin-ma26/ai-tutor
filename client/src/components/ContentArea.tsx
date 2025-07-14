@@ -5,6 +5,7 @@ import { contentStorage } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import LoadingSpinner from "./LoadingSpinner";
+import MathRenderer from "./MathRenderer";
 
 interface ContentAreaProps {
   selectedSubtopicId: string | null;
@@ -229,9 +230,10 @@ export default function ContentArea({
                 Definition
               </h2>
               <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                  {content.definition}
-                </p>
+                <MathRenderer 
+                  content={content.definition}
+                  className="text-slate-700 leading-relaxed"
+                />
               </div>
             </section>
 
@@ -244,9 +246,10 @@ export default function ContentArea({
                 Method
               </h2>
               <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                  {content.method}
-                </p>
+                <MathRenderer 
+                  content={content.method}
+                  className="text-slate-700 leading-relaxed"
+                />
               </div>
             </section>
 
@@ -259,9 +262,10 @@ export default function ContentArea({
                 Worked Example
               </h2>
               <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <div className="text-slate-700 leading-relaxed whitespace-pre-line font-mono text-sm">
-                  {content.example}
-                </div>
+                <MathRenderer 
+                  content={content.example}
+                  className="text-slate-700 leading-relaxed font-mono text-sm"
+                />
               </div>
             </section>
 

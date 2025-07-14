@@ -133,6 +133,37 @@
   color: hsl(207, 90%, 42%);
 }
 
+/* Math rendering styles */
+.math-content {
+  overflow-wrap: break-word;
+}
+
+.math-content .math-display {
+  margin: 1rem 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.math-content .math-inline {
+  margin: 0 2px;
+}
+
+.math-content .math-error {
+  background-color: #fee;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+  color: #c33;
+}
+
+.math-content p {
+  margin-bottom: 1rem;
+}
+
+.math-content p:last-child {
+  margin-bottom: 0;
+}
+
 .bg-primary-50 {
   background-color: hsl(207, 90%, 96%);
 }
