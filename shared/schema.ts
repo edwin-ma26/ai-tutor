@@ -21,10 +21,12 @@ export const subtopicSchema = z.object({
 // Generated content schema
 export const subtopicContentSchema = z.object({
   subtopicId: z.string(),
-  definition: z.string(),
-  method: z.string(),
-  example: z.string(),
+  segments: z.record(z.string(), z.string()), // Dynamic segments based on content needs
   generatedAt: z.string(),
+  // Legacy fields for backward compatibility
+  definition: z.string().optional(),
+  method: z.string().optional(),
+  example: z.string().optional(),
 });
 
 // Chat message schema

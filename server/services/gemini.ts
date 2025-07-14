@@ -82,18 +82,21 @@ export async function generateSubtopicContent(
 ): Promise<SubtopicContent> {
   try {
     const prompt = `I'm studying a course on ${courseTitle}.
-Please write a detailed textbook-style explanation of the subtopic "${subtopicTitle}", which falls under the unit "${unitTitle}".
+Create a structured, pedagogical explanation of "${subtopicTitle}" from the unit "${unitTitle}".
 
-The response should be structured using the following format:
+Generate 2-4 clear learning segments that best serve this topic's educational needs. Choose from these segments based on what makes sense for this specific concept:
 
-Definition:
-<Comprehensive explanation of the concept with proper mathematical notation>
+• Concept Introduction - Core definition and fundamental understanding
+• Why It Matters - Real-world relevance and mathematical significance  
+• Common Form - Standard notation, formulas, or typical presentations
+• How to Solve - Step-by-step problem-solving approach
+• Example - Worked problem demonstrating the concept
+• Visualization Tips - Ways to picture or understand the concept
+• Applications - Where and how this concept is used
 
-Method:
-<Step-by-step approach with formulas and procedures>
-
-Example:
-<Complete worked example with all mathematical steps>
+Format each segment as:
+SEGMENT_NAME:
+[Content with proper LaTeX math notation]
 
 IMPORTANT: Use proper LaTeX notation for all mathematical expressions:
 - Inline math: $x^2 + 1$, $\\frac{dy}{dx}$, $e^{-st}$
@@ -105,7 +108,7 @@ IMPORTANT: Use proper LaTeX notation for all mathematical expressions:
 - Use \\cdot for multiplication dots
 - Format derivatives as \\frac{dy}{dx} or y'
 
-Return clean text with LaTeX math expressions. Do not use markdown formatting.`;
+Select the most appropriate 2-4 segments for this topic. Return clean text with LaTeX math expressions.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -118,46 +121,39 @@ Return clean text with LaTeX math expressions. Do not use markdown formatting.`;
       throw new Error("Empty response from Gemini");
     }
 
-    // Parse the structured response
-    const sections = rawText.split(/(?=Definition:|Method:|Example:)/);
+    // Parse the adaptive structured response
+    const segmentRegex = /^(CONCEPT INTRODUCTION|WHY IT MATTERS|COMMON FORM|HOW TO SOLVE|EXAMPLE|VISUALIZATION TIPS|APPLICATIONS):/gmi;
+    const sections = rawText.split(segmentRegex).filter(section => section.trim());
     
-    let definition = "";
-    let method = "";
-    let example = "";
-
-    sections.forEach(section => {
-      const trimmedSection = section.trim();
+    const parsedSegments: Record<string, string> = {};
+    
+    for (let i = 0; i < sections.length - 1; i += 2) {
+      const segmentName = sections[i]?.trim().toLowerCase().replace(/\s+/g, '_');
+      const segmentContent = sections[i + 1]?.trim();
       
-      if (trimmedSection.startsWith("Definition:")) {
-        definition = trimmedSection.replace("Definition:", "").trim();
-      } else if (trimmedSection.startsWith("Method:")) {
-        method = trimmedSection.replace("Method:", "").trim();
-      } else if (trimmedSection.startsWith("Example:")) {
-        example = trimmedSection.replace("Example:", "").trim();
+      if (segmentName && segmentContent) {
+        parsedSegments[segmentName] = segmentContent;
       }
-    });
+    }
 
-    // Fallback parsing if the structured format wasn't followed
-    if (!definition || !method || !example) {
+    // Fallback parsing if structured format wasn't followed
+    if (Object.keys(parsedSegments).length === 0) {
       const fallbackSections = rawText.split('\n\n').filter(section => section.trim());
       
-      if (fallbackSections.length >= 3) {
-        definition = definition || fallbackSections[0].trim();
-        method = method || fallbackSections[1].trim();
-        example = example || fallbackSections.slice(2).join('\n\n').trim();
+      if (fallbackSections.length >= 2) {
+        parsedSegments['concept_introduction'] = fallbackSections[0]?.trim() || "";
+        parsedSegments['how_to_solve'] = fallbackSections[1]?.trim() || "";
+        if (fallbackSections.length >= 3) {
+          parsedSegments['example'] = fallbackSections.slice(2).join('\n\n').trim();
+        }
       } else {
-        // If all else fails, use the entire response as definition
-        definition = definition || rawText.trim();
-        method = method || "Please refer to the definition above for the general approach.";
-        example = example || "Example will be provided in future updates.";
+        parsedSegments['concept_introduction'] = rawText.trim();
       }
     }
 
     const content: SubtopicContent = {
       subtopicId: subtopicTitle.toLowerCase().replace(/\s+/g, '-'),
-      definition: definition,
-      method: method,
-      example: example,
+      segments: parsedSegments,
       generatedAt: new Date().toISOString(),
     };
 

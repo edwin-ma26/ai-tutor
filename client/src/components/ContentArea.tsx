@@ -7,6 +7,69 @@ import { apiRequest } from "@/lib/queryClient";
 import LoadingSpinner from "./LoadingSpinner";
 import MathRenderer from "./MathRenderer";
 
+// Helper function to get segment configuration
+function getSegmentConfig(segmentKey: string) {
+  const configs: Record<string, {title: string, icon: string, iconColor: string, bgColor: string, textClass: string}> = {
+    'concept_introduction': {
+      title: 'Concept Introduction',
+      icon: 'fas fa-lightbulb',
+      iconColor: 'text-primary-600',
+      bgColor: 'bg-primary-100',
+      textClass: ''
+    },
+    'why_it_matters': {
+      title: 'Why It Matters',
+      icon: 'fas fa-star',
+      iconColor: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      textClass: ''
+    },
+    'common_form': {
+      title: 'Common Form',
+      icon: 'fas fa-code',
+      iconColor: 'text-indigo-600',
+      bgColor: 'bg-indigo-100',
+      textClass: 'font-mono text-sm'
+    },
+    'how_to_solve': {
+      title: 'How to Solve',
+      icon: 'fas fa-cogs',
+      iconColor: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
+      textClass: ''
+    },
+    'example': {
+      title: 'Example',
+      icon: 'fas fa-calculator',
+      iconColor: 'text-amber-600',
+      bgColor: 'bg-amber-100',
+      textClass: 'font-mono text-sm'
+    },
+    'visualization_tips': {
+      title: 'Visualization Tips',
+      icon: 'fas fa-eye',
+      iconColor: 'text-teal-600',
+      bgColor: 'bg-teal-100',
+      textClass: ''
+    },
+    'applications': {
+      title: 'Applications',
+      icon: 'fas fa-rocket',
+      iconColor: 'text-rose-600',
+      bgColor: 'bg-rose-100',
+      textClass: ''
+    }
+  };
+
+  return configs[segmentKey] || {
+    title: segmentKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    icon: 'fas fa-book',
+    iconColor: 'text-slate-600',
+    bgColor: 'bg-slate-100',
+    textClass: ''
+  };
+}
+
 interface ContentAreaProps {
   selectedSubtopicId: string | null;
   selectedUnitId: string | null;
@@ -221,53 +284,81 @@ export default function ContentArea({
         <div className="max-w-4xl mx-auto p-8">
           <article className="prose prose-slate max-w-none">
             
-            {/* Definition Section */}
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
-                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-                  <i className="fas fa-lightbulb text-primary-600 text-sm"></i>
-                </div>
-                Definition
-              </h2>
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <MathRenderer 
-                  content={content.definition}
-                  className="text-slate-700 leading-relaxed"
-                />
-              </div>
-            </section>
+            {/* Dynamic Segments */}
+            {content.segments && Object.entries(content.segments).map(([segmentKey, segmentContent]) => {
+              const segmentConfig = getSegmentConfig(segmentKey);
+              
+              return (
+                <section key={segmentKey} className="mb-8">
+                  <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
+                    <div className={`w-8 h-8 ${segmentConfig.bgColor} rounded-lg flex items-center justify-center mr-3`}>
+                      <i className={`${segmentConfig.icon} ${segmentConfig.iconColor} text-sm`}></i>
+                    </div>
+                    {segmentConfig.title}
+                  </h2>
+                  <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <MathRenderer 
+                      content={segmentContent}
+                      className={`text-slate-700 leading-relaxed ${segmentConfig.textClass}`}
+                    />
+                  </div>
+                </section>
+              );
+            })}
 
-            {/* Method Section */}
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
-                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                  <i className="fas fa-cogs text-emerald-600 text-sm"></i>
-                </div>
-                Method
-              </h2>
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <MathRenderer 
-                  content={content.method}
-                  className="text-slate-700 leading-relaxed"
-                />
-              </div>
-            </section>
+            {/* Legacy support for old format */}
+            {!content.segments && content.definition && (
+              <>
+                <section className="mb-8">
+                  <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
+                    <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                      <i className="fas fa-lightbulb text-primary-600 text-sm"></i>
+                    </div>
+                    Definition
+                  </h2>
+                  <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <MathRenderer 
+                      content={content.definition}
+                      className="text-slate-700 leading-relaxed"
+                    />
+                  </div>
+                </section>
 
-            {/* Example Section */}
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
-                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
-                  <i className="fas fa-calculator text-amber-600 text-sm"></i>
-                </div>
-                Worked Example
-              </h2>
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <MathRenderer 
-                  content={content.example}
-                  className="text-slate-700 leading-relaxed font-mono text-sm"
-                />
-              </div>
-            </section>
+                {content.method && (
+                  <section className="mb-8">
+                    <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
+                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-cogs text-emerald-600 text-sm"></i>
+                      </div>
+                      Method
+                    </h2>
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                      <MathRenderer 
+                        content={content.method}
+                        className="text-slate-700 leading-relaxed"
+                      />
+                    </div>
+                  </section>
+                )}
+
+                {content.example && (
+                  <section className="mb-8">
+                    <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center">
+                      <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-calculator text-amber-600 text-sm"></i>
+                      </div>
+                      Worked Example
+                    </h2>
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                      <MathRenderer 
+                        content={content.example}
+                        className="text-slate-700 leading-relaxed font-mono text-sm"
+                      />
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
 
           </article>
         </div>
