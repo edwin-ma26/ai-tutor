@@ -84,31 +84,52 @@ export async function generateSubtopicContent(
     const prompt = `I'm studying a course on ${courseTitle}.
 Create a structured, pedagogical explanation of "${subtopicTitle}" from the unit "${unitTitle}".
 
-Generate 2-4 clear learning segments that best serve this topic's educational needs. Choose from these segments based on what makes sense for this specific concept:
+STEP 1: First, tell me which segments you will include from this list:
+- CONCEPT INTRODUCTION: Core definition and fundamental understanding
+- WHY IT MATTERS: Real-world relevance and mathematical significance  
+- COMMON FORM: Standard notation, formulas, or typical presentations
+- HOW TO SOLVE: Step-by-step problem-solving approach
+- EXAMPLE: Worked problem demonstrating the concept
+- VISUALIZATION TIPS: Ways to picture or understand the concept
+- APPLICATIONS: Where and how this concept is used
 
-• Concept Introduction - Core definition and fundamental understanding
-• Why It Matters - Real-world relevance and mathematical significance  
-• Common Form - Standard notation, formulas, or typical presentations
-• How to Solve - Step-by-step problem-solving approach
-• Example - Worked problem demonstrating the concept
-• Visualization Tips - Ways to picture or understand the concept
-• Applications - Where and how this concept is used
+STEP 2: Then provide the content for each segment using this EXACT format:
 
-Format each segment as:
-SEGMENT_NAME:
-[Content with proper LaTeX math notation]
+CONCEPT INTRODUCTION:
+[Your content here]
 
-IMPORTANT: Use proper LaTeX notation for all mathematical expressions:
-- Inline math: $x^2 + 1$, $\\frac{dy}{dx}$, $e^{-st}$
-- Display math: $$\\int_0^\\infty e^{-st}f(t)dt = F(s)$$
-- Use \\frac{numerator}{denominator} for fractions
-- Use \\int for integrals, \\sum for summations
-- Use \\lim_{x \\to a} for limits
-- Use \\sqrt{expression} for square roots
-- Use \\cdot for multiplication dots
-- Format derivatives as \\frac{dy}{dx} or y'
+WHY IT MATTERS:
+[Your content here]
 
-Select the most appropriate 2-4 segments for this topic. Return clean text with LaTeX math expressions.`;
+COMMON FORM:
+[Your content here]
+
+HOW TO SOLVE:
+[Your content here]
+
+EXAMPLE:
+[Your content here]
+
+VISUALIZATION TIPS:
+[Your content here]
+
+APPLICATIONS:
+[Your content here]
+
+IMPORTANT RULES:
+1. Choose 2-4 segments that best suit this specific topic
+2. Use the EXACT segment names in ALL CAPS followed by a colon
+3. Use proper LaTeX notation for all mathematical expressions:
+   - Inline math: $x^2 + 1$, $\\frac{dy}{dx}$, $e^{-st}$
+   - Display math: $$\\int_0^\\infty e^{-st}f(t)dt = F(s)$$
+   - Use \\frac{numerator}{denominator} for fractions
+   - Use \\int for integrals, \\sum for summations
+   - Use \\lim_{x \\to a} for limits
+   - Use \\sqrt{expression} for square roots
+   - Use \\cdot for multiplication dots
+   - Format derivatives as \\frac{dy}{dx} or y'
+
+Select the most appropriate 2-4 segments for this topic and provide rich, detailed content.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -121,22 +142,56 @@ Select the most appropriate 2-4 segments for this topic. Return clean text with 
       throw new Error("Empty response from Gemini");
     }
 
-    // Parse the adaptive structured response
-    const segmentRegex = /^(CONCEPT INTRODUCTION|WHY IT MATTERS|COMMON FORM|HOW TO SOLVE|EXAMPLE|VISUALIZATION TIPS|APPLICATIONS):/gmi;
-    const sections = rawText.split(segmentRegex).filter(section => section.trim());
-    
+    // Parse the adaptive structured response with improved regex
     const parsedSegments: Record<string, string> = {};
     
-    for (let i = 0; i < sections.length - 1; i += 2) {
-      const segmentName = sections[i]?.trim().toLowerCase().replace(/\s+/g, '_');
-      const segmentContent = sections[i + 1]?.trim();
+    // Find all segment headers and their positions
+    const segmentHeaders = [
+      'CONCEPT INTRODUCTION',
+      'WHY IT MATTERS', 
+      'COMMON FORM',
+      'HOW TO SOLVE',
+      'EXAMPLE',
+      'VISUALIZATION TIPS',
+      'APPLICATIONS'
+    ];
+    
+    const foundSegments: Array<{name: string, start: number, key: string}> = [];
+    
+    segmentHeaders.forEach(header => {
+      const regex = new RegExp(`^${header}:\\s*`, 'gmi');
+      let match;
+      while ((match = regex.exec(rawText)) !== null) {
+        foundSegments.push({
+          name: header,
+          start: match.index + match[0].length,
+          key: header.toLowerCase().replace(/\s+/g, '_')
+        });
+      }
+    });
+    
+    // Sort segments by position in text
+    foundSegments.sort((a, b) => a.start - b.start);
+    
+    // Extract content between segments
+    for (let i = 0; i < foundSegments.length; i++) {
+      const currentSegment = foundSegments[i];
+      const nextSegment = foundSegments[i + 1];
       
-      if (segmentName && segmentContent) {
-        parsedSegments[segmentName] = segmentContent;
+      const endPos = nextSegment ? nextSegment.start - nextSegment.name.length - 1 : rawText.length;
+      const content = rawText.substring(currentSegment.start, endPos).trim();
+      
+      if (content) {
+        parsedSegments[currentSegment.key] = content;
       }
     }
 
-    // Fallback parsing if structured format wasn't followed
+    console.log('Raw response length:', rawText.length);
+    console.log('Found segments:', foundSegments.map(s => s.name));
+    console.log('Parsed segments:', Object.keys(parsedSegments));
+    console.log('Segment content lengths:', Object.entries(parsedSegments).map(([k, v]) => `${k}: ${v.length} chars`));
+
+    // Fallback parsing if no structured format found
     if (Object.keys(parsedSegments).length === 0) {
       const fallbackSections = rawText.split('\n\n').filter(section => section.trim());
       
@@ -149,6 +204,8 @@ Select the most appropriate 2-4 segments for this topic. Return clean text with 
       } else {
         parsedSegments['concept_introduction'] = rawText.trim();
       }
+      
+      console.log('Used fallback parsing, segments:', Object.keys(parsedSegments));
     }
 
     const content: SubtopicContent = {
