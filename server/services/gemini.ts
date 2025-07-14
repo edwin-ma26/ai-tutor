@@ -287,18 +287,33 @@ export async function generatePracticeQuestions(
 
 Each question should:
 1. Test understanding of the key concepts
-2. Range from basic to intermediate difficulty
+2. Range from basic to intermediate difficulty  
 3. Include a complete, step-by-step solution
+4. Use proper mathematical notation (for equations, use LaTeX format like $y = mx + b$ or $$\\frac{dy}{dx} = 2x$$)
 
 Use this exact format:
 
-QUESTION 1: [Your question here]
-ANSWER 1: [Complete step-by-step solution]
+QUESTION 1: [Your question here - use LaTeX for math equations]
+ANSWER 1: [Complete step-by-step solution with LaTeX math notation]
 
-QUESTION 2: [Your question here]
-ANSWER 2: [Complete step-by-step solution]
+QUESTION 2: [Your question here - use LaTeX for math equations]
+ANSWER 2: [Complete step-by-step solution with LaTeX math notation]
 
-[Continue for all 5 questions...]
+QUESTION 3: [Your question here - use LaTeX for math equations]
+ANSWER 3: [Complete step-by-step solution with LaTeX math notation]
+
+QUESTION 4: [Your question here - use LaTeX for math equations]
+ANSWER 4: [Complete step-by-step solution with LaTeX math notation]
+
+QUESTION 5: [Your question here - use LaTeX for math equations]
+ANSWER 5: [Complete step-by-step solution with LaTeX math notation]
+
+Examples of proper math notation:
+- Inline math: $\\frac{dy}{dx} = 2x + 3$
+- Display math: $$y = \\int (2x + 3)dx = x^2 + 3x + C$$
+- Fractions: $\\frac{a}{b}$
+- Derivatives: $\\frac{d}{dx}[f(x)]$
+- Integrals: $\\int f(x)dx$
 
 Make sure each question tests different aspects of the subtopic and provides educational value.`;
 

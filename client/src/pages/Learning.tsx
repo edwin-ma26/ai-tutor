@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { AppState } from "@/lib/types";
 import { Subtopic } from "@shared/schema";
 import Sidebar from "@/components/Sidebar";
 import ContentArea from "@/components/ContentArea";
 import ChatPanel from "@/components/ChatPanel";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { PracticeContent } from "@/pages/Practice";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { DIFFERENTIAL_EQUATIONS_UNITS } from "@/lib/types";
 
 export default function Learning() {
+  const [location, setLocation] = useLocation();
   const [appState, setAppState] = useState<AppState>({
     selectedUnitId: null,
     selectedSubtopicId: null,
@@ -18,6 +22,34 @@ export default function Learning() {
   
   const [unitSubtopics, setUnitSubtopics] = useState<Record<string, Subtopic[]>>({});
   const [isChatVisible, setIsChatVisible] = useState(true);
+  const [isPracticeMode, setIsPracticeMode] = useState(false);
+
+  // Check for practice mode in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const practiceSubtopicId = urlParams.get('subtopicId');
+    const practiceUnitId = urlParams.get('unitId');
+    
+    if (location.includes('/practice') && practiceSubtopicId && practiceUnitId) {
+      setIsPracticeMode(true);
+      setAppState(prev => ({
+        ...prev,
+        selectedSubtopicId: practiceSubtopicId,
+        selectedUnitId: practiceUnitId,
+      }));
+    } else {
+      setIsPracticeMode(false);
+      // Check for subtopic selection in URL
+      if (practiceSubtopicId && practiceUnitId) {
+        setAppState(prev => ({
+          ...prev,
+          selectedSubtopicId: practiceSubtopicId,
+          selectedUnitId: practiceUnitId,
+          expandedUnits: new Set([practiceUnitId]),
+        }));
+      }
+    }
+  }, [location]);
 
   const handleUnitToggle = (unitId: string) => {
     setAppState(prev => {
@@ -70,6 +102,26 @@ export default function Learning() {
     ? Object.values(unitSubtopics).flat().find(s => s.id === appState.selectedSubtopicId)
     : null;
 
+  // Get subtopic and unit titles for practice mode
+  const getSubtopicTitle = () => {
+    if (selectedSubtopic) return selectedSubtopic.title;
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('subtopicTitle') || '';
+  };
+
+  const getUnitTitle = () => {
+    if (appState.selectedUnitId) {
+      const unit = DIFFERENTIAL_EQUATIONS_UNITS.find(u => u.id === appState.selectedUnitId);
+      return unit?.title || '';
+    }
+    return '';
+  };
+
+  const handleBackToPractice = () => {
+    setIsPracticeMode(false);
+    setLocation('/');
+  };
+
   return (
     <div className="flex h-screen bg-slate-50">
       {appState.isLoading && (
@@ -99,13 +151,23 @@ export default function Learning() {
         
         {/* Main Content Panel */}
         <ResizablePanel id="content" order={2} defaultSize={isChatVisible ? 50 : 75}>
-          <ContentArea
-            selectedSubtopicId={appState.selectedSubtopicId}
-            selectedUnitId={appState.selectedUnitId}
-            subtopics={unitSubtopics}
-            onToggleChat={() => setIsChatVisible(!isChatVisible)}
-            isChatVisible={isChatVisible}
-          />
+          {isPracticeMode && appState.selectedSubtopicId && appState.selectedUnitId ? (
+            <PracticeContent
+              subtopicId={appState.selectedSubtopicId}
+              unitId={appState.selectedUnitId}
+              subtopicTitle={getSubtopicTitle()}
+              unitTitle={getUnitTitle()}
+              onBack={handleBackToPractice}
+            />
+          ) : (
+            <ContentArea
+              selectedSubtopicId={appState.selectedSubtopicId}
+              selectedUnitId={appState.selectedUnitId}
+              subtopics={unitSubtopics}
+              onToggleChat={() => setIsChatVisible(!isChatVisible)}
+              isChatVisible={isChatVisible}
+            />
+          )}
         </ResizablePanel>
         
         {/* Chat Panel - Only show if visible */}
