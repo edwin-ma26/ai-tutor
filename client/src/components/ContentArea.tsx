@@ -181,31 +181,35 @@ export default function ContentArea({
             </span>
           ))}
         </nav>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-start justify-between">
+          <div className="flex-1 mr-4">
             <h1 className="text-2xl font-semibold text-slate-900 mb-1">{selectedSubtopic.title}</h1>
             <p className="text-slate-600">{selectedSubtopic.description}</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col space-y-2">
             <button
               onClick={onToggleChat}
-              className={`px-4 py-2 text-sm rounded-lg transition-colors border ${
+              className={`p-2 rounded-lg transition-colors border ${
                 isChatVisible 
                   ? 'bg-primary-100 text-primary-700 border-primary-200 hover:bg-primary-200' 
                   : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
               }`}
+              title={isChatVisible ? 'Hide AI Chat' : 'Show AI Chat'}
             >
-              <i className={`${isChatVisible ? 'fas fa-eye-slash' : 'fas fa-robot'} mr-2`}></i>
-              {isChatVisible ? 'Hide Chat' : 'Show AI Chat'}
+              <i className={`${isChatVisible ? 'fas fa-eye-slash' : 'fas fa-robot'} text-sm`}></i>
             </button>
-            <button className="px-4 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors border border-emerald-200">
-              <i className="fas fa-question-circle mr-2"></i>Practice Questions
+            <button 
+              className="p-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors border border-emerald-200"
+              title="Practice Questions"
+            >
+              <i className="fas fa-question-circle text-sm"></i>
             </button>
             <button
               onClick={handleRegenerateContent}
-              className="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
+              className="p-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
+              title="Regenerate Content"
             >
-              <i className="fas fa-refresh mr-2"></i>Regenerate
+              <i className="fas fa-refresh text-sm"></i>
             </button>
           </div>
         </div>

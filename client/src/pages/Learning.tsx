@@ -81,7 +81,7 @@ export default function Learning() {
       
       <ResizablePanelGroup direction="horizontal" className="w-full">
         {/* Sidebar Panel */}
-        <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+        <ResizablePanel id="sidebar" order={1} defaultSize={25} minSize={20} maxSize={35}>
           <Sidebar
             selectedUnitId={appState.selectedUnitId}
             selectedSubtopicId={appState.selectedSubtopicId}
@@ -98,7 +98,7 @@ export default function Learning() {
         <ResizableHandle />
         
         {/* Main Content Panel */}
-        <ResizablePanel defaultSize={isChatVisible ? 50 : 75}>
+        <ResizablePanel id="content" order={2} defaultSize={isChatVisible ? 50 : 75}>
           <ContentArea
             selectedSubtopicId={appState.selectedSubtopicId}
             selectedUnitId={appState.selectedUnitId}
@@ -112,7 +112,7 @@ export default function Learning() {
         {isChatVisible && (
           <>
             <ResizableHandle />
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+            <ResizablePanel id="chat" order={3} defaultSize={25} minSize={20} maxSize={40}>
               <ChatPanel
                 selectedSubtopicId={appState.selectedSubtopicId}
                 subtopicTitle={selectedSubtopic?.title || null}
