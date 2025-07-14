@@ -9,9 +9,13 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { PracticeContent } from "@/pages/Practice";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { DIFFERENTIAL_EQUATIONS_UNITS } from "@/lib/types";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export default function Learning() {
   const [location, setLocation] = useLocation();
+  const { user, isLoading: authLoading, signOut } = useAuth();
   const [appState, setAppState] = useState<AppState>({
     selectedUnitId: null,
     selectedSubtopicId: null,
@@ -19,6 +23,13 @@ export default function Learning() {
     isLoading: false,
     loadingMessage: "",
   });
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLocation('/signin');
+    }
+  }, [user, authLoading, setLocation]);
   
   const [unitSubtopics, setUnitSubtopics] = useState<Record<string, Subtopic[]>>({});
   const [isChatVisible, setIsChatVisible] = useState(true);
@@ -122,6 +133,21 @@ export default function Learning() {
     setLocation('/');
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    setLocation('/signin');
+  };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return <LoadingSpinner message="Loading..." />;
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="flex h-screen bg-slate-50">
       {appState.isLoading && (
@@ -130,6 +156,22 @@ export default function Learning() {
           overlay={true} 
         />
       )}
+      
+      {/* Header with user info and sign out */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
+        <span className="text-sm text-slate-600">
+          Welcome, {user.username}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSignOut}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </Button>
+      </div>
       
       <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         {/* Sidebar Panel */}
