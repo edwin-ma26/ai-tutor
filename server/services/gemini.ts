@@ -1,5 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { Subtopic, SubtopicContent } from "@shared/schema";
+import 'dotenv/config';
+
+console.log("Gemini API Key:", process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
 
 // Initialize Gemini AI with API key from environment
 const ai = new GoogleGenAI({ 
