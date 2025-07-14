@@ -7,9 +7,10 @@ import { apiRequest } from "@/lib/queryClient";
 interface ChatPanelProps {
   selectedSubtopicId: string | null;
   subtopicTitle: string | null;
+  onClose?: () => void;
 }
 
-export default function ChatPanel({ selectedSubtopicId, subtopicTitle }: ChatPanelProps) {
+export default function ChatPanel({ selectedSubtopicId, subtopicTitle, onClose }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +105,7 @@ export default function ChatPanel({ selectedSubtopicId, subtopicTitle }: ChatPan
 
   if (!selectedSubtopicId) {
     return (
-      <div className="w-96 bg-white border-l border-slate-200 flex flex-col shadow-sm">
+      <div className="h-full bg-white border-l border-slate-200 flex flex-col shadow-sm">
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center">
             <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -118,18 +119,29 @@ export default function ChatPanel({ selectedSubtopicId, subtopicTitle }: ChatPan
   }
 
   return (
-    <div className="w-96 bg-white border-l border-slate-200 flex flex-col shadow-sm">
+    <div className="h-full bg-white border-l border-slate-200 flex flex-col shadow-sm">
       
       {/* Chat Header */}
       <div className="p-4 border-b border-slate-200 bg-slate-50">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-            <i className="fas fa-robot text-white text-sm"></i>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-robot text-white text-sm"></i>
+            </div>
+            <div>
+              <h3 className="font-medium text-slate-900">AI Assistant</h3>
+              <p className="text-xs text-slate-500">Ask questions about this topic</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-medium text-slate-900">AI Assistant</h3>
-            <p className="text-xs text-slate-500">Ask questions about this topic</p>
-          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              title="Close chat panel"
+            >
+              <i className="fas fa-times text-sm"></i>
+            </button>
+          )}
         </div>
       </div>
 

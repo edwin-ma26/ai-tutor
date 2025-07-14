@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import ContentArea from "@/components/ContentArea";
 import ChatPanel from "@/components/ChatPanel";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 export default function Learning() {
   const [appState, setAppState] = useState<AppState>({
@@ -16,6 +17,7 @@ export default function Learning() {
   });
   
   const [unitSubtopics, setUnitSubtopics] = useState<Record<string, Subtopic[]>>({});
+  const [isChatVisible, setIsChatVisible] = useState(true);
 
   const handleUnitToggle = (unitId: string) => {
     setAppState(prev => {
@@ -77,30 +79,49 @@ export default function Learning() {
         />
       )}
       
-      <Sidebar
-        selectedUnitId={appState.selectedUnitId}
-        selectedSubtopicId={appState.selectedSubtopicId}
-        expandedUnits={appState.expandedUnits}
-        onUnitToggle={handleUnitToggle}
-        onSubtopicSelect={handleSubtopicSelect}
-        isLoading={appState.isLoading}
-        unitSubtopics={unitSubtopics}
-        onSubtopicsGenerated={handleSubtopicsGenerated}
-        setLoading={setLoading}
-      />
-      
-      <div className="flex-1 flex overflow-hidden">
-        <ContentArea
-          selectedSubtopicId={appState.selectedSubtopicId}
-          selectedUnitId={appState.selectedUnitId}
-          subtopics={unitSubtopics}
-        />
+      <ResizablePanelGroup direction="horizontal" className="w-full">
+        {/* Sidebar Panel */}
+        <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+          <Sidebar
+            selectedUnitId={appState.selectedUnitId}
+            selectedSubtopicId={appState.selectedSubtopicId}
+            expandedUnits={appState.expandedUnits}
+            onUnitToggle={handleUnitToggle}
+            onSubtopicSelect={handleSubtopicSelect}
+            isLoading={appState.isLoading}
+            unitSubtopics={unitSubtopics}
+            onSubtopicsGenerated={handleSubtopicsGenerated}
+            setLoading={setLoading}
+          />
+        </ResizablePanel>
         
-        <ChatPanel
-          selectedSubtopicId={appState.selectedSubtopicId}
-          subtopicTitle={selectedSubtopic?.title || null}
-        />
-      </div>
+        <ResizableHandle />
+        
+        {/* Main Content Panel */}
+        <ResizablePanel defaultSize={isChatVisible ? 50 : 75}>
+          <ContentArea
+            selectedSubtopicId={appState.selectedSubtopicId}
+            selectedUnitId={appState.selectedUnitId}
+            subtopics={unitSubtopics}
+            onToggleChat={() => setIsChatVisible(!isChatVisible)}
+            isChatVisible={isChatVisible}
+          />
+        </ResizablePanel>
+        
+        {/* Chat Panel - Only show if visible */}
+        {isChatVisible && (
+          <>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+              <ChatPanel
+                selectedSubtopicId={appState.selectedSubtopicId}
+                subtopicTitle={selectedSubtopic?.title || null}
+                onClose={() => setIsChatVisible(false)}
+              />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
   );
 }

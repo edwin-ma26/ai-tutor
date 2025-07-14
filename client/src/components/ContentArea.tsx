@@ -10,12 +10,16 @@ interface ContentAreaProps {
   selectedSubtopicId: string | null;
   selectedUnitId: string | null;
   subtopics: Record<string, Subtopic[]>;
+  onToggleChat: () => void;
+  isChatVisible: boolean;
 }
 
 export default function ContentArea({
   selectedSubtopicId,
   selectedUnitId,
   subtopics,
+  onToggleChat,
+  isChatVisible,
 }: ContentAreaProps) {
   const [content, setContent] = useState<SubtopicContent | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,13 +31,6 @@ export default function ContentArea({
     : null;
 
   useEffect(() => {
-    console.log('ContentArea useEffect triggered:', {
-      selectedSubtopicId,
-      selectedUnit: selectedUnit?.title,
-      selectedSubtopic: selectedSubtopic?.title,
-      subtopicsTotal: Object.keys(subtopics).length
-    });
-
     if (!selectedSubtopicId || !selectedUnit || !selectedSubtopic) {
       setContent(null);
       return;
@@ -42,14 +39,12 @@ export default function ContentArea({
     // Check cache first
     const cachedContent = contentStorage.get(selectedSubtopicId);
     if (cachedContent) {
-      console.log('Using cached content for:', selectedSubtopic.title);
       setContent(cachedContent);
       return;
     }
 
     // Generate content via API
     const generateContent = async () => {
-      console.log('Generating new content for:', selectedSubtopic.title);
       setIsLoading(true);
       try {
         const response = await apiRequest('POST', '/api/generate-subtopic-page', {
@@ -60,8 +55,6 @@ export default function ContentArea({
         
         const data = await response.json();
         const generatedContent = data.content;
-        
-        console.log('Content generated successfully:', generatedContent);
         
         // Cache the results
         contentStorage.set(selectedSubtopicId, generatedContent);
@@ -194,6 +187,17 @@ export default function ContentArea({
             <p className="text-slate-600">{selectedSubtopic.description}</p>
           </div>
           <div className="flex items-center space-x-3">
+            <button
+              onClick={onToggleChat}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors border ${
+                isChatVisible 
+                  ? 'bg-primary-100 text-primary-700 border-primary-200 hover:bg-primary-200' 
+                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+              }`}
+            >
+              <i className={`${isChatVisible ? 'fas fa-eye-slash' : 'fas fa-robot'} mr-2`}></i>
+              {isChatVisible ? 'Hide Chat' : 'Show AI Chat'}
+            </button>
             <button className="px-4 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors border border-emerald-200">
               <i className="fas fa-question-circle mr-2"></i>Practice Questions
             </button>
