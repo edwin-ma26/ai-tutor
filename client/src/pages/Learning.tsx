@@ -47,6 +47,14 @@ export default function Learning() {
     });
   };
 
+  const handleSubtopicsGenerated = (unitId: string, subtopics: Subtopic[]) => {
+    setUnitSubtopics(prev => ({ ...prev, [unitId]: subtopics }));
+  };
+
+  const setLoading = (loading: boolean, message: string = "") => {
+    setAppState(prev => ({ ...prev, isLoading: loading, loadingMessage: message }));
+  };
+
   const handleSubtopicSelect = (subtopicId: string, unitId: string) => {
     setAppState(prev => ({
       ...prev,
@@ -76,6 +84,9 @@ export default function Learning() {
         onUnitToggle={handleUnitToggle}
         onSubtopicSelect={handleSubtopicSelect}
         isLoading={appState.isLoading}
+        unitSubtopics={unitSubtopics}
+        onSubtopicsGenerated={handleSubtopicsGenerated}
+        setLoading={setLoading}
       />
       
       <div className="flex-1 flex overflow-hidden">

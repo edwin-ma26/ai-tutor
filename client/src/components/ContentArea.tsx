@@ -27,6 +27,13 @@ export default function ContentArea({
     : null;
 
   useEffect(() => {
+    console.log('ContentArea useEffect triggered:', {
+      selectedSubtopicId,
+      selectedUnit: selectedUnit?.title,
+      selectedSubtopic: selectedSubtopic?.title,
+      subtopicsTotal: Object.keys(subtopics).length
+    });
+
     if (!selectedSubtopicId || !selectedUnit || !selectedSubtopic) {
       setContent(null);
       return;
@@ -35,12 +42,14 @@ export default function ContentArea({
     // Check cache first
     const cachedContent = contentStorage.get(selectedSubtopicId);
     if (cachedContent) {
+      console.log('Using cached content for:', selectedSubtopic.title);
       setContent(cachedContent);
       return;
     }
 
     // Generate content via API
     const generateContent = async () => {
+      console.log('Generating new content for:', selectedSubtopic.title);
       setIsLoading(true);
       try {
         const response = await apiRequest('POST', '/api/generate-subtopic-page', {
@@ -51,6 +60,8 @@ export default function ContentArea({
         
         const data = await response.json();
         const generatedContent = data.content;
+        
+        console.log('Content generated successfully:', generatedContent);
         
         // Cache the results
         contentStorage.set(selectedSubtopicId, generatedContent);

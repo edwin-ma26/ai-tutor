@@ -12,6 +12,9 @@ interface SidebarProps {
   onUnitToggle: (unitId: string) => void;
   onSubtopicSelect: (subtopicId: string, unitId: string) => void;
   isLoading: boolean;
+  unitSubtopics: Record<string, Subtopic[]>;
+  onSubtopicsGenerated: (unitId: string, subtopics: Subtopic[]) => void;
+  setLoading: (loading: boolean, message?: string) => void;
 }
 
 export default function Sidebar({
@@ -21,8 +24,11 @@ export default function Sidebar({
   onUnitToggle,
   onSubtopicSelect,
   isLoading,
+  unitSubtopics,
+  onSubtopicsGenerated,
+  setLoading,
 }: SidebarProps) {
-  const [unitSubtopics, setUnitSubtopics] = useState<Record<string, Subtopic[]>>({});
+  const [loadingUnits, setLoadingUnits] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const handleUnitClick = async (unit: Unit) => {
@@ -32,12 +38,15 @@ export default function Sidebar({
       // Check cache first
       const cachedSubtopics = subtopicsStorage.get(unit.id);
       if (cachedSubtopics) {
-        setUnitSubtopics(prev => ({ ...prev, [unit.id]: cachedSubtopics }));
+        onSubtopicsGenerated(unit.id, cachedSubtopics);
         onUnitToggle(unit.id);
         return;
       }
 
       // Generate subtopics via API
+      setLoadingUnits(prev => new Set(prev).add(unit.id));
+      setLoading(true, `Generating subtopics for ${unit.title}...`);
+      
       try {
         const response = await apiRequest('POST', '/api/generate-subtopics', {
           unitTitle: unit.title,
@@ -49,7 +58,7 @@ export default function Sidebar({
         
         // Cache the results
         subtopicsStorage.set(unit.id, subtopics);
-        setUnitSubtopics(prev => ({ ...prev, [unit.id]: subtopics }));
+        onSubtopicsGenerated(unit.id, subtopics);
         
         onUnitToggle(unit.id);
         
@@ -64,6 +73,13 @@ export default function Sidebar({
           description: "Failed to generate subtopics. Please check your internet connection and try again.",
           variant: "destructive",
         });
+      } finally {
+        setLoadingUnits(prev => {
+          const updated = new Set(prev);
+          updated.delete(unit.id);
+          return updated;
+        });
+        setLoading(false);
       }
     } else {
       onUnitToggle(unit.id);
@@ -73,11 +89,7 @@ export default function Sidebar({
   const handleResetUnitCache = () => {
     if (selectedUnitId) {
       subtopicsStorage.clear(selectedUnitId);
-      setUnitSubtopics(prev => {
-        const updated = { ...prev };
-        delete updated[selectedUnitId];
-        return updated;
-      });
+      onSubtopicsGenerated(selectedUnitId, []);
       
       toast({
         title: "Cache Cleared",
@@ -88,7 +100,10 @@ export default function Sidebar({
 
   const handleResetAllCache = () => {
     cacheManager.clearAll();
-    setUnitSubtopics({});
+    // Clear all unit subtopics
+    Object.keys(unitSubtopics).forEach(unitId => {
+      onSubtopicsGenerated(unitId, []);
+    });
     
     toast({
       title: "All Cache Cleared", 
@@ -133,6 +148,7 @@ export default function Sidebar({
             const isExpanded = expandedUnits.has(unit.id);
             const isSelected = selectedUnitId === unit.id;
             const subtopics = unitSubtopics[unit.id] || [];
+            const isUnitLoading = loadingUnits.has(unit.id);
 
             return (
               <div key={unit.id}>
@@ -150,12 +166,20 @@ export default function Sidebar({
                     <span className={`font-medium ${isSelected ? 'text-primary-700' : 'text-slate-700'}`}>
                       {unit.title}
                     </span>
+                    {isUnitLoading && (
+                      <div className="w-4 h-4 border-2 border-primary-300 border-t-primary-600 rounded-full animate-spin"></div>
+                    )}
                   </div>
-                  <i 
-                    className={`fas fa-chevron-down ${isSelected ? 'text-primary-500' : 'text-slate-400'} transform transition-transform ${
-                      isExpanded ? 'rotate-180' : ''
-                    }`}
-                  ></i>
+                  {!isUnitLoading && (
+                    <i 
+                      className={`fas fa-chevron-down ${isSelected ? 'text-primary-500' : 'text-slate-400'} transform transition-transform ${
+                        isExpanded ? 'rotate-180' : ''
+                      }`}
+                    ></i>
+                  )}
+                  {isUnitLoading && (
+                    <i className="fas fa-brain text-primary-500 animate-pulse"></i>
+                  )}
                 </button>
                 
                 {/* Subtopics */}
