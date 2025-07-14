@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 const signInSchema = z.object({
@@ -55,6 +55,9 @@ export default function SignIn() {
       const response = await apiRequest('POST', '/api/auth/signin', data);
       
       if (response.ok) {
+        // Invalidate auth query to refresh user data
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+        
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
@@ -80,6 +83,9 @@ export default function SignIn() {
       const response = await apiRequest('POST', '/api/auth/signup', data);
       
       if (response.ok) {
+        // Invalidate auth query to refresh user data
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+        
         toast({
           title: "Account created!",
           description: "You have successfully created your account and signed in.",
