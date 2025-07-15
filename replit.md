@@ -20,15 +20,27 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend Architecture
 - **Framework**: Express.js server with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM for schema management
+- **Database**: PostgreSQL with Prisma ORM for relational data management
 - **Session Management**: Express sessions with fallback file-based user storage
 - **AI Integration**: Google Gemini Pro API for content generation
 - **Development**: Vite middleware for hot module replacement in development
 
 ### Authentication System
 - Session-based authentication with fallback to file-based storage (users.json)
-- bcryptjs for password hashing
+- bcryptjs for password hashing with secure salt rounds
 - Dual authentication implementation (Prisma-based and file-based fallback)
+- Email-based user registration with username/password authentication
+
+### Database Schema
+- **Users**: Secure user accounts with hashed passwords and email addresses
+- **Courses**: User-owned courses with proper data isolation
+- **Units**: Structured course sections with ordering
+- **Subtopics**: Detailed learning modules within units
+- **InfoPages**: AI-generated educational content stored as JSON
+- **QuestionPages**: Practice problems and solutions
+- **ChatMessages**: User conversation history with AI assistant
+- **UserProgress**: Learning progress tracking per user/unit/subtopic
+- **PracticeResults**: User answers and performance tracking
 
 ## Key Components
 

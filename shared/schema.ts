@@ -21,8 +21,8 @@ export const courseSchema = z.object({
   updatedAt: z.date(),
 });
 
-// Course Unit schema
-export const unitSchema = z.object({
+// Database Unit schema
+export const unitDbSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string(),
@@ -33,8 +33,17 @@ export const unitSchema = z.object({
   updatedAt: z.date(),
 });
 
-// Subtopic schema
-export const subtopicSchema = z.object({
+// API Unit schema (for client responses)
+export const unitSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  icon: z.string(),
+  isCompleted: z.boolean().default(false),
+});
+
+// Database Subtopic schema
+export const subtopicDbSchema = z.object({
   id: z.string(),
   unitId: z.string(),
   title: z.string(),
@@ -42,6 +51,15 @@ export const subtopicSchema = z.object({
   orderIndex: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+// API Subtopic schema (for client responses)
+export const subtopicSchema = z.object({
+  id: z.string(),
+  unitId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  isCompleted: z.boolean().default(false),
 });
 
 // Info page schema
@@ -167,8 +185,8 @@ export const generatePracticeQuestionsResponseSchema = z.object({
 // Insert schemas (for creating new records)
 export const insertUserSchema = userSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCourseSchema = courseSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertUnitSchema = unitSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertSubtopicSchema = subtopicSchema.omit({ id: true, createdAt: true, updatedAt: true });
+export const insertUnitSchema = unitDbSchema.omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSubtopicSchema = subtopicDbSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertInfoPageSchema = infoPageSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertQuestionPageSchema = questionPageSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertUserProgressSchema = userProgressSchema.omit({ id: true, createdAt: true, updatedAt: true });
@@ -191,7 +209,9 @@ export const signInSchema = z.object({
 export type User = z.infer<typeof userSchema>;
 export type Course = z.infer<typeof courseSchema>;
 export type Unit = z.infer<typeof unitSchema>;
+export type UnitDb = z.infer<typeof unitDbSchema>;
 export type Subtopic = z.infer<typeof subtopicSchema>;
+export type SubtopicDb = z.infer<typeof subtopicDbSchema>;
 export type InfoPage = z.infer<typeof infoPageSchema>;
 export type QuestionPage = z.infer<typeof questionPageSchema>;
 export type UserProgress = z.infer<typeof userProgressSchema>;
