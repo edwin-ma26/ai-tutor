@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import CourseNavbar from "@/components/CourseNavbar";
 
 export default function Learning() {
   const [location, setLocation] = useLocation();
@@ -194,8 +195,17 @@ export default function Learning() {
     );
   }
 
+  // Get current subtopic and unit names for navbar
+  const currentSubtopic = appState.selectedSubtopicId 
+    ? Object.values(unitSubtopics).flat().find(s => s.id === appState.selectedSubtopicId)
+    : null;
+  
+  const selectedUnit = appState.selectedUnitId && units
+    ? units.find((u: any) => u.id.toString() === appState.selectedUnitId)
+    : null;
+
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex flex-col h-screen bg-slate-50">
       {appState.isLoading && (
         <LoadingSpinner 
           message={appState.loadingMessage} 
@@ -203,35 +213,17 @@ export default function Learning() {
         />
       )}
       
-      {/* Header with navigation and user info */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setLocation('/dashboard')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Dashboard
-        </Button>
-        
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-600">
-            Welcome, {user.username}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSignOut}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      {/* Top Navigation Bar */}
+      <CourseNavbar
+        courseName={course?.title || "Course"}
+        unitName={selectedUnit?.title}
+        subtopicName={currentSubtopic?.title}
+        userName={user.username}
+        onNavigateToDashboard={() => setLocation('/dashboard')}
+        onSignOut={handleSignOut}
+      />
       
-      <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+      <ResizablePanelGroup direction="horizontal" className="w-full flex-1">
         {/* Sidebar Panel */}
         <ResizablePanel id="sidebar" order={1} defaultSize={25} minSize={20} maxSize={35}>
           <Sidebar

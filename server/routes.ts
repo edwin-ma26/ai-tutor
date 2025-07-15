@@ -271,6 +271,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete course
+  app.delete("/api/courses/:courseId", async (req, res) => {
+    try {
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const courseId = parseInt(req.params.courseId);
+      
+      // First verify the course belongs to the user
+      const course = await prisma.course.findFirst({
+        where: { 
+          id: courseId,
+          userId: user.id 
+        },
+      });
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Delete course and all related data (cascade delete)
+      await prisma.course.delete({
+        where: { id: courseId }
+      });
+      
+      res.json({ message: "Course deleted successfully" });
+    } catch (error) {
+      console.error("Course deletion error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Generate subtopics for a unit
   app.post("/api/generate-subtopics", async (req, res) => {
     try {

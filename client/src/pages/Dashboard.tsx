@@ -12,8 +12,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, BookOpen, GraduationCap, Clock, CheckCircle } from 'lucide-react';
+import { Plus, BookOpen, GraduationCap, Clock, CheckCircle, Trash2, MoreVertical } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Course {
   id: string;
@@ -74,6 +76,26 @@ export default function Dashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to create course",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete course mutation
+  const deleteCourseMutation = useMutation({
+    mutationFn: (courseId: string) => 
+      apiRequest('DELETE', `/api/courses/${courseId}`),
+    onSuccess: (_, courseId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      toast({
+        title: "Course Deleted",
+        description: "Course has been permanently deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete course",
         variant: "destructive",
       });
     },
@@ -235,20 +257,64 @@ export default function Dashboard() {
               const progressColor = getProgressColor(progressPercentage);
               
               return (
-                <Card key={course.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <Link href={`/learning/${course.id}`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="w-5 h-5 text-primary-600" />
-                          <CardTitle className="text-lg">{course.title}</CardTitle>
-                        </div>
+                <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <Link href={`/learning/${course.id}`} className="flex items-center gap-2 flex-1">
+                        <BookOpen className="w-5 h-5 text-primary-600" />
+                        <CardTitle className="text-lg">{course.title}</CardTitle>
+                      </Link>
+                      <div className="flex items-center gap-2">
                         {progressPercentage === 100 && (
                           <CheckCircle className="w-5 h-5 text-green-600" />
                         )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Course
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the course "{course.title}" and all its content.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteCourseMutation.mutate(course.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                    </CardHeader>
-                    <CardContent>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Link href={`/learning/${course.id}`}>
                       <div className="space-y-3">
                         {/* Progress */}
                         <div className="space-y-1">
@@ -276,8 +342,8 @@ export default function Dashboard() {
                           <span>Created {new Date(course.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                    </CardContent>
-                  </Link>
+                    </Link>
+                  </CardContent>
                 </Card>
               );
             })
