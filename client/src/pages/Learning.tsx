@@ -201,7 +201,7 @@ export default function Learning() {
     : null;
   
   const selectedUnit = appState.selectedUnitId && units
-    ? units.find((u: any) => u.id.toString() === appState.selectedUnitId.toString())
+    ? units.find((u: any) => u.id === appState.selectedUnitId)
     : null;
   
 

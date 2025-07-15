@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "./queryClient";
 
 interface AuthUser {
-  id: number;
+  id: string;
   username: string;
 }
 

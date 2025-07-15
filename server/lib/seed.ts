@@ -18,8 +18,6 @@ export async function seedDefaultCourse(userId: string) {
   const course = await prisma.course.create({
     data: {
       title: "Differential Equations",
-      description: "A comprehensive course covering first-order equations, second-order linear equations, systems of equations, and their applications in modeling real-world phenomena.",
-      level: "University",
       userId,
     }
   });
@@ -30,10 +28,7 @@ export async function seedDefaultCourse(userId: string) {
     await prisma.unit.create({
       data: {
         title: unit.title,
-        description: unit.description,
-        icon: unit.icon,
         courseId: course.id,
-        orderIndex: i,
       }
     });
   }
@@ -46,21 +41,12 @@ export async function getUserCourseData(userId: string) {
     where: { userId },
     include: {
       units: {
-        orderBy: { orderIndex: 'asc' },
         include: {
           subtopics: {
-            orderBy: { orderIndex: 'asc' },
             include: {
-              infoPages: {
-                orderBy: { orderIndex: 'asc' }
-              },
-              questionPages: {
-                orderBy: { orderIndex: 'asc' }
-              }
+              infoPages: true,
+              questionPages: true
             }
-          },
-          progress: {
-            where: { userId }
           }
         }
       }

@@ -223,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const course = await prisma.course.findFirst({
         where: { 
-          id: parseInt(req.params.courseId),
+          id: req.params.courseId,
           userId: user.id 
         },
       });
@@ -250,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First verify the course belongs to the user
       const course = await prisma.course.findFirst({
         where: { 
-          id: parseInt(req.params.courseId),
+          id: req.params.courseId,
           userId: user.id 
         },
       });
@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const courseId = parseInt(req.params.courseId);
+      const courseId = req.params.courseId;
       
       // First verify the course belongs to the user
       const course = await prisma.course.findFirst({
@@ -377,8 +377,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingSubtopics.length > 0) {
         // Return existing subtopics in API format
         const subtopics = existingSubtopics.map(s => ({
-          id: s.id.toString(),
-          unitId: unit.id.toString(),
+          id: s.id,
+          unitId: unit.id,
           title: s.title,
           description: s.description,
           isCompleted: false,
@@ -406,8 +406,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Convert to API format
       const subtopics = savedSubtopics.map(s => ({
-        id: s.id.toString(),
-        unitId: unit.id.toString(),
+        id: s.id,
+        unitId: unit.id,
         title: s.title,
         description: s.description,
         isCompleted: false,

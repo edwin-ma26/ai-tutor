@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
+  id       String   @id @default(uuid())
   username String   @unique
   password String   // Store hashed passwords only!
   courses  Course[]
@@ -20,9 +20,9 @@ model User {
 }
 
 model Course {
-  id       Int      @id @default(autoincrement())
+  id       String   @id @default(uuid())
   title    String
-  userId   Int
+  userId   String
   user     User     @relation(fields: [userId], references: [id])
   units    Unit[]
 
@@ -30,41 +30,41 @@ model Course {
 }
 
 model Unit {
-  id        Int     @id @default(autoincrement())
+  id        String   @id @default(uuid())
   title     String
-  courseId  Int
-  course    Course  @relation(fields: [courseId], references: [id])
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
   subtopics Subtopic[]
 
   @@map("units")
 }
 
 model Subtopic {
-  id      Int     @id @default(autoincrement())
-  title   String
+  id          String   @id @default(uuid())
+  title       String
   description String
-  unitId  Int
-  unit    Unit   @relation(fields: [unitId], references: [id])
-  infoPages InfoPage[]
+  unitId      String
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  infoPages   InfoPage[]
   questionPages QuestionPage[]
 
   @@map("subtopics")
 }
 
 model InfoPage {
-  id         Int    @id @default(autoincrement())
+  id         String   @id @default(uuid())
   content    String
-  subtopicId Int
+  subtopicId String
   subtopic   Subtopic @relation(fields: [subtopicId], references: [id])
 
   @@map("info_pages")
 }
 
 model QuestionPage {
-  id         Int    @id @default(autoincrement())
+  id         String   @id @default(uuid())
   question   String
   answer     String
-  subtopicId Int
+  subtopicId String
   subtopic   Subtopic @relation(fields: [subtopicId], references: [id])
 
   @@map("question_pages")

@@ -1,42 +1,42 @@
 import { z } from "zod";
 
-// Database schemas (matching Prisma models)
+// Database schemas (using UUIDs for all IDs)
 export const userSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   username: z.string(),
   password: z.string(),
 });
 
 export const courseSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   title: z.string(),
-  userId: z.number(),
+  userId: z.string().uuid(),
 });
 
 export const unitSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   title: z.string(),
-  courseId: z.number(),
+  courseId: z.string().uuid(),
 });
 
 export const subtopicSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   title: z.string(),
   description: z.string(),
-  unitId: z.number(),
+  unitId: z.string().uuid(),
 });
 
 export const infoPageSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   content: z.string(),
-  subtopicId: z.number(),
+  subtopicId: z.string().uuid(),
 });
 
 export const questionPageSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   question: z.string(),
   answer: z.string(),
-  subtopicId: z.number(),
+  subtopicId: z.string().uuid(),
 });
 
 // Insert schemas (for creating new records)

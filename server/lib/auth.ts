@@ -3,7 +3,7 @@ import { prisma } from "./prisma";
 import { Request } from "express";
 
 export interface AuthUser {
-  id: number;
+  id: string;
   username: string;
 }
 
@@ -51,7 +51,7 @@ export async function authenticateUser(username: string, password: string): Prom
   };
 }
 
-export async function getUserById(id: number): Promise<AuthUser | null> {
+export async function getUserById(id: string): Promise<AuthUser | null> {
   const user = await prisma.user.findUnique({
     where: { id },
   });
