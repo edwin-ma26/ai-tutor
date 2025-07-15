@@ -5,6 +5,7 @@ import { Request } from 'express';
 export interface AuthUser {
   id: string;
   username: string;
+  email: string;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -15,17 +16,19 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return await bcrypt.compare(password, hashedPassword);
 }
 
-export async function createUser(username: string, password: string): Promise<AuthUser> {
+export async function createUser(username: string, email: string, password: string): Promise<AuthUser> {
   const hashedPassword = await hashPassword(password);
   
   const user = await prisma.user.create({
     data: {
       username,
-      password: hashedPassword,
+      email,
+      hashedPassword,
     },
     select: {
       id: true,
       username: true,
+      email: true,
     },
   });
   
@@ -38,7 +41,8 @@ export async function authenticateUser(username: string, password: string): Prom
     select: {
       id: true,
       username: true,
-      password: true,
+      email: true,
+      hashedPassword: true,
     },
   });
   
@@ -46,7 +50,7 @@ export async function authenticateUser(username: string, password: string): Prom
     return null;
   }
   
-  const isValid = await verifyPassword(password, user.password);
+  const isValid = await verifyPassword(password, user.hashedPassword);
   if (!isValid) {
     return null;
   }
@@ -54,6 +58,7 @@ export async function authenticateUser(username: string, password: string): Prom
   return {
     id: user.id,
     username: user.username,
+    email: user.email,
   };
 }
 
@@ -63,6 +68,7 @@ export async function getUserById(id: string): Promise<AuthUser | null> {
     select: {
       id: true,
       username: true,
+      email: true,
     },
   });
   

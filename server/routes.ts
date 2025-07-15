@@ -11,18 +11,9 @@ import {
   generatePracticeQuestionsResponseSchema
 } from "@shared/schema";
 import { generateSubtopics, generateSubtopicContent, generateChatResponse, generatePracticeQuestions } from "./services/gemini";
+// Try to use database auth, fall back to file auth if database is not ready
 import { authenticateUser, createUser, getCurrentUser, requireAuth } from "./lib/auth-fallback";
-import { z } from "zod";
-
-const signInSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-});
-
-const signUpSchema = z.object({
-  username: z.string().min(3),
-  password: z.string().min(6),
-});
+import { signInSchema, signUpSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   

@@ -11,58 +11,135 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String   @unique
+  hashedPassword String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  // Learning progress
+  // Relations
+  courses         Course[]
   progress        UserProgress[]
-  completedUnits  CompletedUnit[]
-  chatHistory     ChatMessage[]
+  chatMessages    ChatMessage[]
   practiceResults PracticeResult[]
 
   @@map("users")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  level       String
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  units Unit[]
+
+  @@map("courses")
+}
+
+model Unit {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  courseId    String
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subtopics Subtopic[]
+  progress  UserProgress[]
+
+  @@map("units")
+}
+
+model Subtopic {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  unitId      String
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  unit            Unit             @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  progress        UserProgress[]
+  chatMessages    ChatMessage[]
+  practiceResults PracticeResult[]
+  infoPages       InfoPage[]
+  questionPages   QuestionPage[]
+
+  @@map("subtopics")
+}
+
+model InfoPage {
+  id         String   @id @default(cuid())
+  subtopicId String
+  title      String
+  content    String   // JSON content with segments
+  orderIndex Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  subtopic Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+
+  @@map("info_pages")
+}
+
+model QuestionPage {
+  id         String   @id @default(cuid())
+  subtopicId String
+  questions  String   // JSON array of practice questions
+  orderIndex Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  subtopic Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+
+  @@map("question_pages")
 }
 
 model UserProgress {
   id         String   @id @default(cuid())
   userId     String
   unitId     String
-  subtopicId String
+  subtopicId String?
   completed  Boolean  @default(false)
   progress   Float    @default(0) // 0-1 representing completion percentage
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit     Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  subtopic Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
 
   @@unique([userId, unitId, subtopicId])
   @@map("user_progress")
-}
-
-model CompletedUnit {
-  id          String   @id @default(cuid())
-  userId      String
-  unitId      String
-  completedAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, unitId])
-  @@map("completed_units")
 }
 
 model ChatMessage {
   id         String   @id @default(cuid())
   userId     String
   subtopicId String
-  message    String
-  response   String
+  role       String   // 'user' or 'assistant'
+  content    String
   createdAt  DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtopic Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
 }
@@ -73,10 +150,12 @@ model PracticeResult {
   subtopicId String
   questionId String
   correct    Boolean
-  attempt    String
+  userAnswer String
   createdAt  DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtopic Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
 
   @@map("practice_results")
 }

@@ -18,6 +18,7 @@ const signInSchema = z.object({
 
 const signUpSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -43,6 +44,7 @@ export default function SignIn() {
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
     },
   });
@@ -142,6 +144,23 @@ export default function SignIn() {
                 </p>
               )}
             </div>
+            
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...signUpForm.register("email")}
+                  placeholder="Enter your email"
+                />
+                {signUpForm.formState.errors.email && (
+                  <p className="text-sm text-red-500">
+                    {signUpForm.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
