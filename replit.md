@@ -100,7 +100,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Environment Requirements
 - Node.js with ES modules support
-- Supabase PostgreSQL database with SUPABASE_DATABASE_URL environment variable
+- Supabase PostgreSQL database with DATABASE_URL environment variable (set to Supabase connection string)
 - Google Gemini API key for content generation
 
 The application is designed as a progressive learning platform where content complexity increases organically through AI-generated materials, providing a personalized educational experience without requiring pre-authored content.
