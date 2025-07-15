@@ -18,7 +18,6 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 interface Course {
   id: string;
   title: string;
-  description: string;
   progress: {
     completed: number;
     total: number;
@@ -28,7 +27,6 @@ interface Course {
 
 interface CreateCourseRequest {
   title: string;
-  description?: string;
   units?: string[];
 }
 
@@ -38,7 +36,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('');
-  const [courseDescription, setCourseDescription] = useState('');
+
   const [pastedText, setPastedText] = useState('');
   const [activeTab, setActiveTab] = useState('scratch');
 
@@ -64,7 +62,6 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
       setIsCreateDialogOpen(false);
       setCourseTitle('');
-      setCourseDescription('');
       setPastedText('');
       toast({
         title: "Course Created",
@@ -94,7 +91,6 @@ export default function Dashboard() {
 
     createCourseMutation.mutate({
       title: courseTitle.trim(),
-      description: courseDescription.trim() || undefined,
     });
   };
 
@@ -110,7 +106,6 @@ export default function Dashboard() {
 
     createCourseMutation.mutate({
       title: courseTitle.trim(),
-      description: courseDescription.trim() || undefined,
       units: [pastedText.trim()], // Will be processed by backend
     });
   };
@@ -182,16 +177,7 @@ export default function Dashboard() {
                       onChange={(e) => setCourseTitle(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="course-description">Description (Optional)</Label>
-                    <Textarea
-                      id="course-description"
-                      placeholder="Brief description of the course"
-                      value={courseDescription}
-                      onChange={(e) => setCourseDescription(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
+
                   <Button 
                     onClick={handleCreateFromScratch}
                     disabled={createCourseMutation.isPending}
@@ -211,16 +197,7 @@ export default function Dashboard() {
                       onChange={(e) => setCourseTitle(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="course-description-text">Description (Optional)</Label>
-                    <Textarea
-                      id="course-description-text"
-                      placeholder="Brief description of the course"
-                      value={courseDescription}
-                      onChange={(e) => setCourseDescription(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="pasted-text">Course Content</Label>
                     <Textarea
@@ -270,11 +247,6 @@ export default function Dashboard() {
                           <CheckCircle className="w-5 h-5 text-green-600" />
                         )}
                       </div>
-                      {course.description && (
-                        <CardDescription className="line-clamp-2">
-                          {course.description}
-                        </CardDescription>
-                      )}
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">

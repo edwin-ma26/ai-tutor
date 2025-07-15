@@ -168,7 +168,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const course = await prisma.course.create({
         data: {
           title: title.trim(),
-          description: description?.trim() || null,
           userId: user.id,
         },
       });
@@ -228,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           completed: 0,
           total: 0,
         },
-        createdAt: courseWithUnits?.createdAt?.toISOString() || new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
       res.json(courseWithProgress);
