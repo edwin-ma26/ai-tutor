@@ -95,11 +95,11 @@ export default function ContentArea({
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const selectedUnit = units?.find(u => u.id.toString() === selectedUnitId);
+  const selectedUnit = units?.find(u => u.id.toString() === selectedUnitId?.toString());
   const selectedSubtopic = selectedSubtopicId 
     ? Object.values(subtopics).flat().find(s => s.id === selectedSubtopicId)
     : null;
-
+  
   useEffect(() => {
     if (!selectedSubtopicId || !selectedUnit || !selectedSubtopic) {
       setContent(null);
@@ -147,7 +147,7 @@ export default function ContentArea({
     };
 
     generateContent();
-  }, [selectedSubtopicId, selectedUnit, selectedSubtopic, toast]);
+  }, [selectedSubtopicId, selectedUnit, selectedSubtopic, course, toast]);
 
   const handleRegenerateContent = async () => {
     if (!selectedSubtopicId || !selectedUnit || !selectedSubtopic) return;
