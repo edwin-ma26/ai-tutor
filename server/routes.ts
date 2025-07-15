@@ -42,18 +42,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = signUpSchema.parse(req.body);
       
+      console.log("Creating user:", validatedData.username);
       const user = await createUser(validatedData.username, validatedData.password);
+      console.log("✓ Database Response - User Created:");
+      console.log(`  ID: ${user.id}, Username: ${user.username}`);
       
       // Create a default course for the new user
+      console.log("Creating course for user ID:", user.id);
       const course = await prisma.course.create({
         data: {
           title: "Differential Equations",
           userId: user.id,
         },
       });
+      console.log("✓ Database Response - Course Created:");
+      console.log(`  ID: ${course.id}, Title: ${course.title}, UserID: ${course.userId}`);
       
       // Create units for the course
-      await Promise.all(
+      console.log("Creating units for course ID:", course.id);
+      const units = await Promise.all(
         DIFFERENTIAL_EQUATIONS_UNITS.map((unit, index) =>
           prisma.unit.create({
             data: {
@@ -63,6 +70,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })
         )
       );
+      console.log("✓ Database Response - Units Created:");
+      units.forEach(unit => {
+        console.log(`  ID: ${unit.id}, Title: ${unit.title}, CourseID: ${unit.courseId}`);
+      });
       
       // Store user in session
       (req.session as any).user = user;

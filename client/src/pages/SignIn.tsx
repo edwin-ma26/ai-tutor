@@ -54,9 +54,9 @@ export default function SignIn() {
         const errorData = await response.json();
         setError(errorData.message || "Invalid username or password");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign in error:', error);
-      setError("An error occurred during sign in. Please try again.");
+      setError(error.message || "An error occurred during sign in. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -82,9 +82,9 @@ export default function SignIn() {
         const errorData = await response.json();
         setError(errorData.message || "Failed to create account");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign up error:', error);
-      setError("An error occurred during sign up. Please try again.");
+      setError(error.message || "An error occurred during sign up. Please try again.");
     } finally {
       setIsLoading(false);
     }
