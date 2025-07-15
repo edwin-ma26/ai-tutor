@@ -11,9 +11,9 @@ import {
   generatePracticeQuestionsResponseSchema
 } from "@shared/schema";
 import { generateSubtopics, generateSubtopicContent, generateChatResponse, generatePracticeQuestions } from "./services/gemini";
-// Try to use database auth, fall back to file auth if database is not ready
-import { authenticateUser, createUser, getCurrentUser, requireAuth } from "./lib/auth-fallback";
-import { signInSchema, signUpSchema } from "@shared/schema";
+import { authenticateUser, createUser, getCurrentUser, requireAuth } from "./lib/auth";
+import { signInSchema, signUpSchema, DIFFERENTIAL_EQUATIONS_UNITS } from "@shared/schema";
+import { prisma } from "./lib/prisma";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -43,6 +43,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = signUpSchema.parse(req.body);
       
       const user = await createUser(validatedData.username, validatedData.password);
+      
+      // Create a default course for the new user
+      const course = await prisma.course.create({
+        data: {
+          title: "Differential Equations",
+          userId: user.id,
+        },
+      });
+      
+      // Create units for the course
+      await Promise.all(
+        DIFFERENTIAL_EQUATIONS_UNITS.map((unit, index) =>
+          prisma.unit.create({
+            data: {
+              title: unit.title,
+              courseId: course.id,
+            },
+          })
+        )
+      );
       
       // Store user in session
       (req.session as any).user = user;
@@ -77,33 +97,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user });
   });
   
+  // Get user courses
+  app.get("/api/courses", async (req, res) => {
+    try {
+      const user = requireAuth(req);
+      
+      const courses = await prisma.course.findMany({
+        where: { userId: user.id },
+        include: {
+          units: {
+            include: {
+              subtopics: true,
+            },
+          },
+        },
+      });
+      
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
   // Generate subtopics for a unit
   app.post("/api/generate-subtopics", async (req, res) => {
     try {
+      const user = requireAuth(req);
       const validatedData = generateSubtopicsRequestSchema.parse(req.body);
+      const { unitTitle, courseTitle } = validatedData;
       
-      const subtopics = await generateSubtopics(validatedData.unitTitle, validatedData.courseTitle);
+      // Find the unit in the database
+      const unit = await prisma.unit.findFirst({
+        where: {
+          title: unitTitle,
+          course: {
+            title: courseTitle,
+            userId: user.id,
+          },
+        },
+      });
+      
+      if (!unit) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+      
+      // Check if subtopics already exist
+      const existingSubtopics = await prisma.subtopic.findMany({
+        where: { unitId: unit.id },
+      });
+      
+      if (existingSubtopics.length > 0) {
+        // Return existing subtopics in API format
+        const subtopics = existingSubtopics.map(s => ({
+          id: s.id.toString(),
+          unitId: unit.id.toString(),
+          title: s.title,
+          description: s.description,
+          isCompleted: false,
+        }));
+        
+        const response = generateSubtopicsResponseSchema.parse({ subtopics });
+        return res.json(response);
+      }
+      
+      // Generate new subtopics
+      const generatedSubtopics = await generateSubtopics(unitTitle, courseTitle);
+      
+      // Save subtopics to database
+      const savedSubtopics = await Promise.all(
+        generatedSubtopics.map(subtopic =>
+          prisma.subtopic.create({
+            data: {
+              title: subtopic.title,
+              description: subtopic.description,
+              unitId: unit.id,
+            },
+          })
+        )
+      );
+      
+      // Convert to API format
+      const subtopics = savedSubtopics.map(s => ({
+        id: s.id.toString(),
+        unitId: unit.id.toString(),
+        title: s.title,
+        description: s.description,
+        isCompleted: false,
+      }));
       
       const response = generateSubtopicsResponseSchema.parse({ subtopics });
       res.json(response);
     } catch (error) {
       console.error("Error generating subtopics:", error);
-      res.status(500).json({ 
-        message: "Failed to generate subtopics. Please check your API key and try again." 
-      });
+      res.status(500).json({ message: "Failed to generate subtopics" });
     }
   });
 
   // Generate content for a subtopic
   app.post("/api/generate-subtopic-page", async (req, res) => {
     try {
+      const user = requireAuth(req);
       const validatedData = generateContentRequestSchema.parse(req.body);
       
+      // Find the subtopic in the database
+      const subtopic = await prisma.subtopic.findFirst({
+        where: {
+          title: validatedData.subtopicTitle,
+          unit: {
+            title: validatedData.unitTitle,
+            course: {
+              title: validatedData.courseTitle,
+              userId: user.id,
+            },
+          },
+        },
+      });
+      
+      if (!subtopic) {
+        return res.status(404).json({ message: "Subtopic not found" });
+      }
+      
+      // Check if content already exists
+      const existingContent = await prisma.infoPage.findFirst({
+        where: { subtopicId: subtopic.id },
+      });
+      
+      if (existingContent) {
+        // Return existing content
+        const content = JSON.parse(existingContent.content);
+        const response = generateContentResponseSchema.parse({ content });
+        return res.json(response);
+      }
+      
+      // Generate new content
       const content = await generateSubtopicContent(
         validatedData.subtopicTitle,
         validatedData.unitTitle,
         validatedData.courseTitle
       );
+      
+      // Save content to database
+      await prisma.infoPage.create({
+        data: {
+          content: JSON.stringify(content),
+          subtopicId: subtopic.id,
+        },
+      });
       
       const response = generateContentResponseSchema.parse({ content });
       res.json(response);
@@ -138,13 +278,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate practice questions for a subtopic
   app.post("/api/generate-practice-questions", async (req, res) => {
     try {
+      const user = requireAuth(req);
       const validatedData = generatePracticeQuestionsRequestSchema.parse(req.body);
       
+      // Find the subtopic in the database
+      const subtopic = await prisma.subtopic.findFirst({
+        where: {
+          title: validatedData.subtopicTitle,
+          unit: {
+            title: validatedData.unitTitle,
+            course: {
+              title: validatedData.courseTitle,
+              userId: user.id,
+            },
+          },
+        },
+      });
+      
+      if (!subtopic) {
+        return res.status(404).json({ message: "Subtopic not found" });
+      }
+      
+      // Check if questions already exist
+      const existingQuestions = await prisma.questionPage.findFirst({
+        where: { subtopicId: subtopic.id },
+      });
+      
+      if (existingQuestions) {
+        // Return existing questions
+        const questions = JSON.parse(existingQuestions.question);
+        const response = generatePracticeQuestionsResponseSchema.parse({ questions });
+        return res.json(response);
+      }
+      
+      // Generate new questions
       const questions = await generatePracticeQuestions(
         validatedData.subtopicTitle,
         validatedData.unitTitle,
         validatedData.courseTitle
       );
+      
+      // Save questions to database
+      await prisma.questionPage.create({
+        data: {
+          question: JSON.stringify(questions),
+          answer: "", // We store both in the question field as JSON
+          subtopicId: subtopic.id,
+        },
+      });
       
       const response = generatePracticeQuestionsResponseSchema.parse({ questions });
       res.json(response);

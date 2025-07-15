@@ -1,88 +1,79 @@
-import bcrypt from 'bcryptjs';
-import { prisma } from './prisma';
-import { Request } from 'express';
+import bcrypt from "bcryptjs";
+import { prisma } from "./prisma";
+import { Request } from "express";
 
 export interface AuthUser {
-  id: string;
+  id: number;
   username: string;
-  email: string;
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
 
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return await bcrypt.compare(password, hashedPassword);
+  return bcrypt.compare(password, hashedPassword);
 }
 
-export async function createUser(username: string, email: string, password: string): Promise<AuthUser> {
+export async function createUser(username: string, password: string): Promise<AuthUser> {
   const hashedPassword = await hashPassword(password);
   
   const user = await prisma.user.create({
     data: {
       username,
-      email,
-      hashedPassword,
-    },
-    select: {
-      id: true,
-      username: true,
-      email: true,
+      password: hashedPassword,
     },
   });
-  
-  return user;
+
+  return {
+    id: user.id,
+    username: user.username,
+  };
 }
 
 export async function authenticateUser(username: string, password: string): Promise<AuthUser | null> {
   const user = await prisma.user.findUnique({
     where: { username },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      hashedPassword: true,
-    },
   });
-  
+
   if (!user) {
     return null;
   }
-  
-  const isValid = await verifyPassword(password, user.hashedPassword);
+
+  const isValid = await verifyPassword(password, user.password);
   if (!isValid) {
     return null;
   }
-  
+
   return {
     id: user.id,
     username: user.username,
-    email: user.email,
   };
 }
 
-export async function getUserById(id: string): Promise<AuthUser | null> {
+export async function getUserById(id: number): Promise<AuthUser | null> {
   const user = await prisma.user.findUnique({
     where: { id },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-    },
   });
-  
-  return user;
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    username: user.username,
+  };
 }
 
 export function getCurrentUser(req: Request): AuthUser | null {
-  return (req.session as any)?.user || null;
+  return req.session?.user || null;
 }
 
 export function requireAuth(req: Request): AuthUser {
   const user = getCurrentUser(req);
   if (!user) {
-    throw new Error('Authentication required');
+    throw new Error("Authentication required");
   }
   return user;
 }

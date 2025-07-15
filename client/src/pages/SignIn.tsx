@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,20 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-const signInSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-const signUpSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type SignInData = z.infer<typeof signInSchema>;
-type SignUpData = z.infer<typeof signUpSchema>;
+import { signInSchema, signUpSchema, type SignInData, type SignUpData } from "@shared/schema";
 
 export default function SignIn() {
   const [, setLocation] = useLocation();
@@ -44,7 +30,6 @@ export default function SignIn() {
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       username: "",
-      email: "",
       password: "",
     },
   });
@@ -145,22 +130,7 @@ export default function SignIn() {
               )}
             </div>
             
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...signUpForm.register("email")}
-                  placeholder="Enter your email"
-                />
-                {signUpForm.formState.errors.email && (
-                  <p className="text-sm text-red-500">
-                    {signUpForm.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-            )}
+
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
