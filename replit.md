@@ -42,11 +42,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Key Components
 
+### Course Management
+1. **Dashboard Interface**: Canvas LMS-style course grid displaying user courses with progress tracking
+2. **Course Creation**: Two-mode course generation - "From Scratch" using standard university curricula or "From Text" analyzing provided content
+3. **Unit Generation**: AI-powered unit structure creation using Gemini for both standard and custom course outlines
+
 ### Content Generation Pipeline
 1. **Subtopic Generation**: When a unit is first clicked, Gemini generates pedagogically structured subtopics
 2. **Content Generation**: When a subtopic is first clicked, Gemini creates detailed textbook-style explanations with multiple sections
 3. **Practice Questions**: AI-generated practice problems with detailed solutions
 4. **Interactive Chat**: Context-aware chat assistant for each subtopic
+5. **Enhanced Formatting**: Support for bullet points (*), bold text (**), and mathematical expressions with KaTeX
 
 ### Storage Strategy
 - **Client-side Caching**: All generated content is cached in localStorage to avoid redundant API calls
@@ -54,9 +60,11 @@ Preferred communication style: Simple, everyday language.
 - **Cache Management**: Built-in cache clearing and management utilities
 
 ### UI Layout
+- **Dashboard**: Canvas LMS-style course grid with progress tracking and course creation
 - **Resizable Panels**: Three-panel layout with sidebar, main content, and chat panel
 - **Responsive Design**: Mobile-friendly with collapsible panels
-- **Mathematical Rendering**: KaTeX integration for proper mathematical notation display
+- **Mathematical Rendering**: KaTeX integration with bullet points (*) and bold text (**) support
+- **Navigation**: Dashboard-Learning navigation with back buttons
 
 ## Data Flow
 

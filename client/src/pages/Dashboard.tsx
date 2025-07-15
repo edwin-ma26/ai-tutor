@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Link, useLocation } from 'wouter';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -33,6 +34,7 @@ interface CreateCourseRequest {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('');
@@ -40,20 +42,25 @@ export default function Dashboard() {
   const [pastedText, setPastedText] = useState('');
   const [activeTab, setActiveTab] = useState('scratch');
 
-  // Fetch user's courses
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLocation('/signin');
+    }
+  }, [user, authLoading, setLocation]);
+
+  // Fetch user's courses - only when authenticated
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['/api/courses'],
-    enabled: true,
+    enabled: !!user,
   });
 
   // Create course mutation
   const createCourseMutation = useMutation({
     mutationFn: (courseData: CreateCourseRequest) => 
-      apiRequest('/api/courses', {
-        method: 'POST',
-        body: JSON.stringify(courseData),
-      }),
-    onSuccess: (newCourse) => {
+      apiRequest('POST', '/api/courses', courseData),
+    onSuccess: async (response) => {
+      const newCourse = await response.json();
       queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
       setIsCreateDialogOpen(false);
       setCourseTitle('');
@@ -118,6 +125,16 @@ export default function Dashboard() {
     if (percentage >= 50) return 'text-blue-600';
     return 'text-gray-600';
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return <LoadingSpinner message="Loading..." />;
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   if (isLoading) {
     return <LoadingSpinner message="Loading your courses..." />;
