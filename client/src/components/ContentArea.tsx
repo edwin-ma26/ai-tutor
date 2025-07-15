@@ -228,29 +228,10 @@ export default function ContentArea({
     );
   }
 
-  // Get breadcrumb
-  const breadcrumb = [
-    "Differential Equations",
-    selectedUnit.title,
-    selectedSubtopic.title
-  ];
-
   return (
     <div className="h-full flex flex-col bg-slate-50">
       {/* Content Header */}
       <header className="bg-white border-b border-slate-200 p-6 shadow-sm flex-shrink-0">
-        <nav className="flex items-center space-x-2 text-sm mb-3">
-          {breadcrumb.map((item, index) => (
-            <span key={index} className="flex items-center">
-              <span className={index === breadcrumb.length - 1 ? "text-primary-600 font-medium" : "text-slate-500"}>
-                {item}
-              </span>
-              {index < breadcrumb.length - 1 && (
-                <i className="fas fa-chevron-right text-slate-300 text-xs mx-2"></i>
-              )}
-            </span>
-          ))}
-        </nav>
         <div className="flex items-start justify-between">
           <div className="flex-1 mr-4">
             <h1 className="text-2xl font-semibold text-slate-900 mb-1">{selectedSubtopic.title}</h1>

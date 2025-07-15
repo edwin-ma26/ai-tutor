@@ -122,3 +122,10 @@ The application is designed as a progressive learning platform where content com
 - **Database Schema Updates**: Courses are now fully dynamic with AI-generated units stored in database
 - **User Experience**: Users can create courses "From Scratch" or "From Text" with AI generating relevant unit structures
 - **Navigation Fix**: Corrected post-creation navigation to use proper URL parameters instead of query strings
+
+### UI Improvements and Bug Fixes (July 15, 2025)
+- **Course Deletion**: Fixed foreign key constraint errors by implementing proper cascading deletion order
+- **Content Generation**: Resolved content generation issues by fixing unit ID matching and dynamic course title usage
+- **Navigation Enhancement**: Removed redundant breadcrumb from content area header (now only in top navbar)
+- **Navbar Breadcrumb**: Enhanced navigation to show complete path: Course → Unit → Subtopic
+- **User Experience**: Cleaner interface with consistent navigation patterns and proper loading states
