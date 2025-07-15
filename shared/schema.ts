@@ -73,8 +73,9 @@ export const contentSegmentSchema = z.object({
 });
 
 export const subtopicContentSchema = z.object({
-  title: z.string(),
-  content: z.array(contentSegmentSchema),
+  subtopicId: z.string(),
+  segments: z.record(z.string()),
+  generatedAt: z.string(),
 });
 
 export const practiceQuestionSchema = z.object({
