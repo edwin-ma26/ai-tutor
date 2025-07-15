@@ -68,7 +68,7 @@ export default function Dashboard() {
         description: `"${newCourse.title}" has been created successfully.`,
       });
       // Navigate to the new course
-      setLocation(`/learning?courseId=${newCourse.id}`);
+      setLocation(`/learning/${newCourse.id}`);
     },
     onError: (error: any) => {
       toast({

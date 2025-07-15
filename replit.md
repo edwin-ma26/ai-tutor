@@ -112,3 +112,13 @@ Preferred communication style: Simple, everyday language.
 - Google Gemini API key for content generation
 
 The application is designed as a progressive learning platform where content complexity increases organically through AI-generated materials, providing a personalized educational experience without requiring pre-authored content.
+
+## Recent Changes
+
+### Course-Specific Learning Pages (July 15, 2025)
+- **Dynamic Course Content**: Removed hardcoded differential equations units and implemented course-specific learning pages
+- **AI-Generated Units**: Each course now uses AI to generate appropriate unit structures based on course title using standardized university curricula
+- **URL Parameter Routing**: Updated routing from `/learning` to `/learning/:courseId` for course-specific pages
+- **Database Schema Updates**: Courses are now fully dynamic with AI-generated units stored in database
+- **User Experience**: Users can create courses "From Scratch" or "From Text" with AI generating relevant unit structures
+- **Navigation Fix**: Corrected post-creation navigation to use proper URL parameters instead of query strings
