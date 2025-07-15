@@ -12,7 +12,7 @@ import {
 } from "@shared/schema";
 import { generateSubtopics, generateSubtopicContent, generateChatResponse, generatePracticeQuestions, generateStandardUnits, generateUnitsFromText } from "./services/gemini";
 import { authenticateUser, createUser, getCurrentUser, requireAuth } from "./lib/auth";
-import { signInSchema, signUpSchema, DIFFERENTIAL_EQUATIONS_UNITS } from "@shared/schema";
+import { signInSchema, signUpSchema } from "@shared/schema";
 import { prisma } from "./lib/prisma";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -46,34 +46,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await createUser(validatedData.username, validatedData.password);
       console.log("✓ Database Response - User Created:");
       console.log(`  ID: ${user.id}, Username: ${user.username}`);
-      
-      // Create a default course for the new user
-      console.log("Creating course for user ID:", user.id);
-      const course = await prisma.course.create({
-        data: {
-          title: "Differential Equations",
-          userId: user.id,
-        },
-      });
-      console.log("✓ Database Response - Course Created:");
-      console.log(`  ID: ${course.id}, Title: ${course.title}, UserID: ${course.userId}`);
-      
-      // Create units for the course
-      console.log("Creating units for course ID:", course.id);
-      const units = await Promise.all(
-        DIFFERENTIAL_EQUATIONS_UNITS.map((unit, index) =>
-          prisma.unit.create({
-            data: {
-              title: unit.title,
-              courseId: course.id,
-            },
-          })
-        )
-      );
-      console.log("✓ Database Response - Units Created:");
-      units.forEach(unit => {
-        console.log(`  ID: ${unit.id}, Title: ${unit.title}, CourseID: ${unit.courseId}`);
-      });
       
       // Store user in session
       (req.session as any).user = user;
@@ -238,6 +210,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to create course" });
       }
+    }
+  });
+
+  // Get specific course
+  app.get("/api/courses/:courseId", async (req, res) => {
+    try {
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const course = await prisma.course.findFirst({
+        where: { 
+          id: parseInt(req.params.courseId),
+          userId: user.id 
+        },
+      });
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json(course);
+    } catch (error) {
+      console.error("Course fetch error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get course units
+  app.get("/api/courses/:courseId/units", async (req, res) => {
+    try {
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // First verify the course belongs to the user
+      const course = await prisma.course.findFirst({
+        where: { 
+          id: parseInt(req.params.courseId),
+          userId: user.id 
+        },
+      });
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      const units = await prisma.unit.findMany({
+        where: { courseId: course.id },
+        orderBy: { id: 'asc' },
+      });
+      
+      res.json(units);
+    } catch (error) {
+      console.error("Units fetch error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

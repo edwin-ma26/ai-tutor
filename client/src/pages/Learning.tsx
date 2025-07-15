@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { AppState } from "@/lib/types";
 import { Subtopic } from "@shared/schema";
 import Sidebar from "@/components/Sidebar";
@@ -8,13 +8,15 @@ import ChatPanel from "@/components/ChatPanel";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PracticeContent } from "@/pages/Practice";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { DIFFERENTIAL_EQUATIONS_UNITS } from "@/lib/types";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { LogOut, ArrowLeft } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Learning() {
   const [location, setLocation] = useLocation();
+  const params = useParams();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const [appState, setAppState] = useState<AppState>({
     selectedUnitId: null,
@@ -22,6 +24,29 @@ export default function Learning() {
     expandedUnits: new Set(),
     isLoading: false,
     loadingMessage: "",
+  });
+
+  // Get course ID from URL parameters
+  const courseId = params.courseId;
+
+  // Fetch course data
+  const { data: course, isLoading: courseLoading, error: courseError } = useQuery({
+    queryKey: ['/api/courses', courseId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/courses/${courseId}`);
+      return response.json();
+    },
+    enabled: !!courseId && !!user,
+  });
+
+  // Fetch course units
+  const { data: units, isLoading: unitsLoading, error: unitsError } = useQuery({
+    queryKey: ['/api/courses', courseId, 'units'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/courses/${courseId}/units`);
+      return response.json();
+    },
+    enabled: !!courseId && !!user,
   });
 
   // Redirect to sign-in if not authenticated
@@ -121,8 +146,8 @@ export default function Learning() {
   };
 
   const getUnitTitle = () => {
-    if (appState.selectedUnitId) {
-      const unit = DIFFERENTIAL_EQUATIONS_UNITS.find(u => u.id === appState.selectedUnitId);
+    if (appState.selectedUnitId && units) {
+      const unit = units.find((u: any) => u.id === appState.selectedUnitId);
       return unit?.title || '';
     }
     return '';
@@ -146,6 +171,27 @@ export default function Learning() {
   // Don't render if not authenticated (will redirect)
   if (!user) {
     return null;
+  }
+
+  // Show loading while fetching course data
+  if (courseLoading || unitsLoading) {
+    return <LoadingSpinner message="Loading course..." />;
+  }
+
+  // Handle course not found or error
+  if (courseError || unitsError || !course) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Course Not Found</h1>
+          <p className="text-slate-600 mb-4">The course you're looking for doesn't exist or you don't have access to it.</p>
+          <Button onClick={() => setLocation('/dashboard')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -198,6 +244,8 @@ export default function Learning() {
             unitSubtopics={unitSubtopics}
             onSubtopicsGenerated={handleSubtopicsGenerated}
             setLoading={setLoading}
+            course={course}
+            units={units || []}
           />
         </ResizablePanel>
         

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Unit, Subtopic } from "@shared/schema";
-import { DIFFERENTIAL_EQUATIONS_UNITS, COURSE_INFO } from "@/lib/types";
 import { subtopicsStorage, cacheManager } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -17,6 +16,8 @@ interface SidebarProps {
   unitSubtopics: Record<string, Subtopic[]>;
   onSubtopicsGenerated: (unitId: string, subtopics: Subtopic[]) => void;
   setLoading: (loading: boolean, message?: string) => void;
+  course: any;
+  units: any[];
 }
 
 export default function Sidebar({
@@ -29,6 +30,8 @@ export default function Sidebar({
   unitSubtopics,
   onSubtopicsGenerated,
   setLoading,
+  course,
+  units,
 }: SidebarProps) {
   const [loadingUnits, setLoadingUnits] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -53,7 +56,7 @@ export default function Sidebar({
       try {
         const response = await apiRequest('POST', '/api/generate-subtopics', {
           unitTitle: unit.title,
-          courseTitle: "Differential Equations"
+          courseTitle: course.title
         });
         
         const data = await response.json();
@@ -132,13 +135,13 @@ export default function Sidebar({
       {/* Course Info */}
       <div className="p-6 bg-slate-50 border-b border-slate-200">
         <h2 className="text-sm font-medium text-slate-700 uppercase tracking-wide mb-2">Current Course</h2>
-        <h3 className="text-lg font-semibold text-slate-900 mb-1">{COURSE_INFO.title}</h3>
-        <p className="text-sm text-slate-600">{COURSE_INFO.description}</p>
+        <h3 className="text-lg font-semibold text-slate-900 mb-1">{course?.title}</h3>
+        <p className="text-sm text-slate-600">University Level</p>
         <div className="mt-4 flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
             <span className="text-xs text-slate-600">
-              {COURSE_INFO.progress.completed}/{COURSE_INFO.progress.total} Units Complete
+              0/{units?.length || 0} Units Complete
             </span>
           </div>
         </div>
@@ -147,16 +150,16 @@ export default function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-2">
-          {DIFFERENTIAL_EQUATIONS_UNITS.map((unit) => {
-            const isExpanded = expandedUnits.has(unit.id);
-            const isSelected = selectedUnitId === unit.id;
-            const subtopics = unitSubtopics[unit.id] || [];
-            const isUnitLoading = loadingUnits.has(unit.id);
+          {units?.map((unit) => {
+            const isExpanded = expandedUnits.has(unit.id.toString());
+            const isSelected = selectedUnitId === unit.id.toString();
+            const subtopics = unitSubtopics[unit.id.toString()] || [];
+            const isUnitLoading = loadingUnits.has(unit.id.toString());
 
             return (
               <div key={unit.id}>
                 <button
-                  onClick={() => handleUnitClick(unit)}
+                  onClick={() => handleUnitClick({...unit, id: unit.id.toString()})}
                   disabled={isLoading}
                   className={`w-full flex items-center justify-between p-3 text-left rounded-lg transition-colors ${
                     isSelected
@@ -165,7 +168,7 @@ export default function Sidebar({
                   } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center space-x-3">
-                    <i className={`${unit.icon} ${isSelected ? 'text-primary-500' : 'text-slate-400'}`}></i>
+                    <FileText className={`w-5 h-5 ${isSelected ? 'text-primary-500' : 'text-slate-400'}`} />
                     <span className={`font-medium ${isSelected ? 'text-primary-700' : 'text-slate-700'}`}>
                       {unit.title}
                     </span>

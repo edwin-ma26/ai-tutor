@@ -236,7 +236,7 @@ export default function Dashboard() {
               
               return (
                 <Card key={course.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <Link href={`/learning?courseId=${course.id}`}>
+                  <Link href={`/learning/${course.id}`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
