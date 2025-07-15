@@ -15,7 +15,7 @@ export default function MathRenderer({ content, className = "" }: MathRendererPr
 
     const container = containerRef.current;
     
-    // Parse and render math expressions
+    // Parse and render math expressions and formatting
     const renderMath = (text: string): string => {
       // Handle display math ($$...$$)
       text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, mathContent) => {
@@ -47,19 +47,48 @@ export default function MathRenderer({ content, className = "" }: MathRendererPr
         }
       });
 
+      // Handle bold text (**text**)
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
       return text;
     };
 
     // Render the content with math
     const renderedContent = renderMath(content);
     
-    // Convert line breaks to proper HTML
-    const htmlContent = renderedContent
+    // Convert line breaks to proper HTML with bullet point support
+    const lines = renderedContent
       .split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .map(line => `<p>${line}</p>`)
-      .join('');
+      .filter(line => line.length > 0);
+    
+    let htmlContent = '';
+    let inList = false;
+    
+    for (const line of lines) {
+      // Check if line starts with asterisk (bullet point)
+      if (line.startsWith('*') && !line.startsWith('**')) {
+        const bulletContent = line.substring(1).trim();
+        
+        if (!inList) {
+          htmlContent += '<ul class="list-disc list-inside space-y-1 ml-4">';
+          inList = true;
+        }
+        
+        htmlContent += `<li>${bulletContent}</li>`;
+      } else {
+        if (inList) {
+          htmlContent += '</ul>';
+          inList = false;
+        }
+        htmlContent += `<p>${line}</p>`;
+      }
+    }
+    
+    // Close any remaining open list
+    if (inList) {
+      htmlContent += '</ul>';
+    }
 
     container.innerHTML = htmlContent;
     

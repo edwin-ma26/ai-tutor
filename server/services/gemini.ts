@@ -181,7 +181,17 @@ Select the most appropriate 2-4 segments for this topic and provide rich, detail
       const currentSegment = foundSegments[i];
       const nextSegment = foundSegments[i + 1];
       
-      const endPos = nextSegment ? nextSegment.start - nextSegment.name.length - 1 : rawText.length;
+      let endPos: number;
+      if (nextSegment) {
+        // Find the actual start of the next segment header in the raw text
+        const nextHeaderRegex = new RegExp(`^${nextSegment.name}:\\s*`, 'gmi');
+        nextHeaderRegex.lastIndex = currentSegment.start;
+        const nextHeaderMatch = nextHeaderRegex.exec(rawText);
+        endPos = nextHeaderMatch ? nextHeaderMatch.index : rawText.length;
+      } else {
+        endPos = rawText.length;
+      }
+      
       const content = rawText.substring(currentSegment.start, endPos).trim();
       
       if (content) {
