@@ -201,8 +201,10 @@ export default function Learning() {
     : null;
   
   const selectedUnit = appState.selectedUnitId && units
-    ? units.find((u: any) => u.id.toString() === appState.selectedUnitId)
+    ? units.find((u: any) => u.id.toString() === appState.selectedUnitId.toString())
     : null;
+  
+
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
