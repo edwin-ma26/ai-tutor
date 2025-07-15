@@ -100,7 +100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user courses
   app.get("/api/courses", async (req, res) => {
     try {
-      const user = requireAuth(req);
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
       
       const courses = await prisma.course.findMany({
         where: { userId: user.id },
@@ -123,7 +126,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate subtopics for a unit
   app.post("/api/generate-subtopics", async (req, res) => {
     try {
-      const user = requireAuth(req);
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
       const validatedData = generateSubtopicsRequestSchema.parse(req.body);
       const { unitTitle, courseTitle } = validatedData;
       
@@ -197,7 +203,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate content for a subtopic
   app.post("/api/generate-subtopic-page", async (req, res) => {
     try {
-      const user = requireAuth(req);
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
       const validatedData = generateContentRequestSchema.parse(req.body);
       
       // Find the subtopic in the database
@@ -278,7 +287,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate practice questions for a subtopic
   app.post("/api/generate-practice-questions", async (req, res) => {
     try {
-      const user = requireAuth(req);
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
       const validatedData = generatePracticeQuestionsRequestSchema.parse(req.body);
       
       // Find the subtopic in the database
