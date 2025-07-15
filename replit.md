@@ -72,7 +72,7 @@ Preferred communication style: Simple, everyday language.
 - **API Key Management**: Environment variable configuration for Gemini API access
 
 ### Database Services
-- **Neon Database**: PostgreSQL hosting (configured but with fallback)
+- **Supabase Database**: PostgreSQL hosting with connection string configuration
 - **Drizzle ORM**: Type-safe database schema and migrations
 
 ### Third-party Libraries
@@ -85,7 +85,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Development Environment
 - **Vite Dev Server**: Hot module replacement with Express middleware
-- **Environment Variables**: Gemini API key and database URL configuration
+- **Environment Variables**: Gemini API key and Supabase database URL configuration
 - **Replit Integration**: Special handling for Replit development environment
 
 ### Production Build
@@ -100,7 +100,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Environment Requirements
 - Node.js with ES modules support
-- PostgreSQL database (with fallback to file-based storage)
+- Supabase PostgreSQL database with SUPABASE_DATABASE_URL environment variable
 - Google Gemini API key for content generation
 
 The application is designed as a progressive learning platform where content complexity increases organically through AI-generated materials, providing a personalized educational experience without requiring pre-authored content.
