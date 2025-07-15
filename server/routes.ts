@@ -10,7 +10,7 @@ import {
   chatResponseSchema,
   generatePracticeQuestionsResponseSchema
 } from "@shared/schema";
-import { generateSubtopics, generateSubtopicContent, generateChatResponse, generatePracticeQuestions } from "./services/gemini";
+import { generateSubtopics, generateSubtopicContent, generateChatResponse, generatePracticeQuestions, generateStandardUnits, generateUnitsFromText } from "./services/gemini";
 import { authenticateUser, createUser, getCurrentUser, requireAuth } from "./lib/auth";
 import { signInSchema, signUpSchema, DIFFERENTIAL_EQUATIONS_UNITS } from "@shared/schema";
 import { prisma } from "./lib/prisma";
@@ -127,10 +127,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
       
-      res.json(courses);
+      // Calculate progress for each course
+      const coursesWithProgress = courses.map(course => {
+        const totalSubtopics = course.units.reduce((sum, unit) => sum + unit.subtopics.length, 0);
+        const completedSubtopics = course.units.reduce((sum, unit) => 
+          sum + unit.subtopics.filter(subtopic => subtopic.isCompleted).length, 0);
+        
+        return {
+          ...course,
+          progress: {
+            completed: completedSubtopics,
+            total: totalSubtopics,
+          },
+          createdAt: course.createdAt?.toISOString() || new Date().toISOString(),
+        };
+      });
+      
+      res.json(coursesWithProgress);
     } catch (error) {
       console.error("Error fetching courses:", error);
       res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
+  // Create a new course
+  app.post("/api/courses", async (req, res) => {
+    try {
+      const user = getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { title, description, units: textContent } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ message: "Course title is required" });
+      }
+
+      // Create the course
+      const course = await prisma.course.create({
+        data: {
+          title: title.trim(),
+          description: description?.trim() || null,
+          userId: user.id,
+        },
+      });
+
+      // Generate units based on input type
+      let unitTitles: string[] = [];
+      
+      if (textContent && textContent.length > 0 && textContent[0].trim()) {
+        // Generate units from provided text using Gemini
+        try {
+          const generatedUnits = await generateUnitsFromText(title, textContent[0]);
+          unitTitles = generatedUnits;
+        } catch (error) {
+          console.error("Error generating units from text:", error);
+          // Fallback to a basic unit structure
+          unitTitles = ["Introduction", "Core Concepts", "Advanced Topics", "Applications"];
+        }
+      } else {
+        // Generate standard units for the course title
+        try {
+          const generatedUnits = await generateStandardUnits(title);
+          unitTitles = generatedUnits;
+        } catch (error) {
+          console.error("Error generating standard units:", error);
+          // Fallback to a basic unit structure
+          unitTitles = ["Introduction", "Fundamentals", "Intermediate Topics", "Advanced Applications"];
+        }
+      }
+
+      // Create the units
+      const units = await Promise.all(
+        unitTitles.map((unitTitle) =>
+          prisma.unit.create({
+            data: {
+              title: unitTitle.trim(),
+              courseId: course.id,
+            },
+          })
+        )
+      );
+
+      // Return the created course with units
+      const courseWithUnits = await prisma.course.findUnique({
+        where: { id: course.id },
+        include: {
+          units: {
+            include: {
+              subtopics: true,
+            },
+          },
+        },
+      });
+
+      const courseWithProgress = {
+        ...courseWithUnits,
+        progress: {
+          completed: 0,
+          total: 0,
+        },
+        createdAt: courseWithUnits?.createdAt?.toISOString() || new Date().toISOString(),
+      };
+
+      res.json(courseWithProgress);
+    } catch (error: any) {
+      console.error("Error creating course:", error);
+      if (error.code === 'P2002') {
+        res.status(400).json({ message: "Course title already exists" });
+      } else {
+        res.status(500).json({ message: "Failed to create course" });
+      }
     }
   });
 

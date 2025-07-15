@@ -286,6 +286,92 @@ export async function testGeminiConnection(): Promise<boolean> {
   }
 }
 
+// Generate standard units for a course from scratch
+export async function generateStandardUnits(courseTitle: string): Promise<string[]> {
+  try {
+    const prompt = `I'm designing a course on ${courseTitle}.
+Please generate a list of the most standardized and commonly taught unit titles in a typical undergraduate ${courseTitle} course.
+Each unit title should be concise (2–5 words) and reflect standard topics found in textbooks and syllabi across universities.
+List the units in a logical, pedagogically sound order, building understanding progressively.
+Separate each unit title with a new line, with no numbering or bullet points.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const rawText = response.text || "";
+    
+    if (!rawText) {
+      throw new Error("Empty response from Gemini");
+    }
+
+    const cleanedText = cleanResponse(rawText);
+    
+    // Parse the response into unit titles
+    const unitTitles = cleanedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .slice(0, 10); // Limit to 10 units max
+
+    if (unitTitles.length === 0) {
+      throw new Error("No valid unit titles generated");
+    }
+
+    return unitTitles;
+
+  } catch (error) {
+    console.error("Error generating standard units:", error);
+    throw new Error(`Failed to generate units: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Generate units from provided text content
+export async function generateUnitsFromText(courseTitle: string, textContent: string): Promise<string[]> {
+  try {
+    const prompt = `I'm creating a course on "${courseTitle}" based on the following content:
+
+${textContent}
+
+Please analyze this content and generate a list of the most logical unit titles that would organize this material effectively for learning.
+Each unit title should be concise (2–5 words) and reflect the main topics covered in the provided text.
+List the units in a logical, pedagogically sound order, building understanding progressively.
+Separate each unit title with a new line, with no numbering or bullet points.
+Generate between 4-8 units based on the content provided.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const rawText = response.text || "";
+    
+    if (!rawText) {
+      throw new Error("Empty response from Gemini");
+    }
+
+    const cleanedText = cleanResponse(rawText);
+    
+    // Parse the response into unit titles
+    const unitTitles = cleanedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .slice(0, 10); // Limit to 10 units max
+
+    if (unitTitles.length === 0) {
+      throw new Error("No valid unit titles generated");
+    }
+
+    return unitTitles;
+
+  } catch (error) {
+    console.error("Error generating units from text:", error);
+    throw new Error(`Failed to generate units: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 // Generate practice questions for a subtopic
 export async function generatePracticeQuestions(
   subtopicTitle: string,

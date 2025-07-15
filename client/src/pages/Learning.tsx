@@ -11,7 +11,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { DIFFERENTIAL_EQUATIONS_UNITS } from "@/lib/types";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, ArrowLeft } from "lucide-react";
 
 export default function Learning() {
   const [location, setLocation] = useLocation();
@@ -157,20 +157,32 @@ export default function Learning() {
         />
       )}
       
-      {/* Header with user info and sign out */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-        <span className="text-sm text-slate-600">
-          Welcome, {user.username}
-        </span>
+      {/* Header with navigation and user info */}
+      <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
         <Button
           variant="outline"
           size="sm"
-          onClick={handleSignOut}
+          onClick={() => setLocation('/dashboard')}
           className="flex items-center gap-2"
         >
-          <LogOut className="w-4 h-4" />
-          Sign Out
+          <ArrowLeft className="w-4 h-4" />
+          Dashboard
         </Button>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-600">
+            Welcome, {user.username}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSignOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
       </div>
       
       <ResizablePanelGroup direction="horizontal" className="w-full h-full">
