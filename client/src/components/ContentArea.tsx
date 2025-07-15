@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { SubtopicContent, Subtopic } from "@shared/schema";
-import { DIFFERENTIAL_EQUATIONS_UNITS } from "@/lib/types";
 import { contentStorage } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -78,6 +77,8 @@ interface ContentAreaProps {
   subtopics: Record<string, Subtopic[]>;
   onToggleChat: () => void;
   isChatVisible: boolean;
+  course: any;
+  units: any[];
 }
 
 export default function ContentArea({
@@ -86,13 +87,15 @@ export default function ContentArea({
   subtopics,
   onToggleChat,
   isChatVisible,
+  course,
+  units,
 }: ContentAreaProps) {
   const [content, setContent] = useState<SubtopicContent | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const selectedUnit = DIFFERENTIAL_EQUATIONS_UNITS.find(u => u.id === selectedUnitId);
+  const selectedUnit = units?.find(u => u.id.toString() === selectedUnitId);
   const selectedSubtopic = selectedSubtopicId 
     ? Object.values(subtopics).flat().find(s => s.id === selectedSubtopicId)
     : null;
@@ -117,7 +120,7 @@ export default function ContentArea({
         const response = await apiRequest('POST', '/api/generate-subtopic-page', {
           subtopicTitle: selectedSubtopic.title,
           unitTitle: selectedUnit.title,
-          courseTitle: "Differential Equations"
+          courseTitle: course?.title || "Course"
         });
         
         const data = await response.json();
@@ -158,7 +161,7 @@ export default function ContentArea({
       const response = await apiRequest('POST', '/api/generate-subtopic-page', {
         subtopicTitle: selectedSubtopic.title,
         unitTitle: selectedUnit.title,
-        courseTitle: "Differential Equations"
+        courseTitle: course?.title || "Course"
       });
       
       const data = await response.json();

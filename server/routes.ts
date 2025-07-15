@@ -293,7 +293,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Course not found" });
       }
       
-      // Delete course and all related data (cascade delete)
+      // Delete course and all related data (manual cascade delete)
+      // First delete all question pages
+      await prisma.questionPage.deleteMany({
+        where: {
+          subtopic: {
+            unit: {
+              courseId: courseId
+            }
+          }
+        }
+      });
+      
+      // Then delete all info pages
+      await prisma.infoPage.deleteMany({
+        where: {
+          subtopic: {
+            unit: {
+              courseId: courseId
+            }
+          }
+        }
+      });
+      
+      // Then delete all subtopics
+      await prisma.subtopic.deleteMany({
+        where: {
+          unit: {
+            courseId: courseId
+          }
+        }
+      });
+      
+      // Then delete all units
+      await prisma.unit.deleteMany({
+        where: {
+          courseId: courseId
+        }
+      });
+      
+      // Finally delete the course
       await prisma.course.delete({
         where: { id: courseId }
       });

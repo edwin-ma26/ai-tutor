@@ -260,6 +260,8 @@ export default function Learning() {
               subtopics={unitSubtopics}
               onToggleChat={() => setIsChatVisible(!isChatVisible)}
               isChatVisible={isChatVisible}
+              course={course}
+              units={units || []}
             />
           )}
         </ResizablePanel>
